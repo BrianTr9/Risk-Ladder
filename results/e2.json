@@ -1,0 +1,241 @@
+{
+  "maps": 12,
+  "bound": 0.01,
+  "grid": {
+    "slips": [
+      0.0025,
+      0.005,
+      0.01,
+      0.02,
+      0.04
+    ],
+    "cells": [
+      {
+        "believed": 0.0025,
+        "true": 0.0025,
+        "mean_violation": 1.4456028966473392e-19,
+        "share_violating": 0.0,
+        "mean_extra_cost": 0.0
+      },
+      {
+        "believed": 0.0025,
+        "true": 0.005,
+        "mean_violation": 0.009877724146249432,
+        "share_violating": 1.0,
+        "mean_extra_cost": -1.1910079285907893
+      },
+      {
+        "believed": 0.0025,
+        "true": 0.01,
+        "mean_violation": 0.02930358940140682,
+        "share_violating": 1.0,
+        "mean_extra_cost": -0.43175436090507535
+      },
+      {
+        "believed": 0.0025,
+        "true": 0.02,
+        "mean_violation": 0.06686405693000114,
+        "share_violating": 1.0,
+        "mean_extra_cost": 3.2634699234422513
+      },
+      {
+        "believed": 0.0025,
+        "true": 0.04,
+        "mean_violation": 0.1372460177748423,
+        "share_violating": 1.0,
+        "mean_extra_cost": 11.4880449684954
+      },
+      {
+        "believed": 0.005,
+        "true": 0.0025,
+        "mean_violation": 0.0,
+        "share_violating": 0.0,
+        "mean_extra_cost": 1.8207540782676637
+      },
+      {
+        "believed": 0.005,
+        "true": 0.005,
+        "mean_violation": 1.4456028966473392e-19,
+        "share_violating": 0.0,
+        "mean_extra_cost": 0.0
+      },
+      {
+        "believed": 0.005,
+        "true": 0.01,
+        "mean_violation": 0.010013654191677922,
+        "share_violating": 1.0,
+        "mean_extra_cost": -0.4525207904714253
+      },
+      {
+        "believed": 0.005,
+        "true": 0.02,
+        "mean_violation": 0.03007654839995967,
+        "share_violating": 1.0,
+        "mean_extra_cost": 1.001843917188883
+      },
+      {
+        "believed": 0.005,
+        "true": 0.04,
+        "mean_violation": 0.07031785788684347,
+        "share_violating": 1.0,
+        "mean_extra_cost": 5.414507406656639
+      },
+      {
+        "believed": 0.01,
+        "true": 0.0025,
+        "mean_violation": 0.0,
+        "share_violating": 0.0,
+        "mean_extra_cost": 3.200896729093031
+      },
+      {
+        "believed": 0.01,
+        "true": 0.005,
+        "mean_violation": 0.0,
+        "share_violating": 0.0,
+        "mean_extra_cost": 1.069579245585798
+      },
+      {
+        "believed": 0.01,
+        "true": 0.01,
+        "mean_violation": 1.4456028966473392e-19,
+        "share_violating": 0.0,
+        "mean_extra_cost": 0.0
+      },
+      {
+        "believed": 0.01,
+        "true": 0.02,
+        "mean_violation": 0.010168880783136495,
+        "share_violating": 1.0,
+        "mean_extra_cost": 0.23739426840127464
+      },
+      {
+        "believed": 0.01,
+        "true": 0.04,
+        "mean_violation": 0.031022558152511693,
+        "share_violating": 1.0,
+        "mean_extra_cost": 2.2909398135213195
+      },
+      {
+        "believed": 0.02,
+        "true": 0.0025,
+        "mean_violation": 0.0,
+        "share_violating": 0.0,
+        "mean_extra_cost": 4.33083591509795
+      },
+      {
+        "believed": 0.02,
+        "true": 0.005,
+        "mean_violation": 0.0,
+        "share_violating": 0.0,
+        "mean_extra_cost": 2.003453736529805
+      },
+      {
+        "believed": 0.02,
+        "true": 0.01,
+        "mean_violation": 0.0,
+        "share_violating": 0.0,
+        "mean_extra_cost": 0.5423957044944588
+      },
+      {
+        "believed": 0.02,
+        "true": 0.02,
+        "mean_violation": 1.4456028966473392e-19,
+        "share_violating": 0.0,
+        "mean_extra_cost": 0.0
+      },
+      {
+        "believed": 0.02,
+        "true": 0.04,
+        "mean_violation": 0.006834902368227726,
+        "share_violating": 0.6666666666666666,
+        "mean_extra_cost": 0.5110711505120653
+      },
+      {
+        "believed": 0.04,
+        "true": 0.0025,
+        "mean_violation": 0.0,
+        "share_violating": 0.0,
+        "mean_extra_cost": 5.304220692494067
+      },
+      {
+        "believed": 0.04,
+        "true": 0.005,
+        "mean_violation": 0.0,
+        "share_violating": 0.0,
+        "mean_extra_cost": 2.883085041196353
+      },
+      {
+        "believed": 0.04,
+        "true": 0.01,
+        "mean_violation": 0.0,
+        "share_violating": 0.0,
+        "mean_extra_cost": 1.2323998339388906
+      },
+      {
+        "believed": 0.04,
+        "true": 0.02,
+        "mean_violation": 0.0,
+        "share_violating": 0.0,
+        "mean_extra_cost": 0.3020086149071366
+      },
+      {
+        "believed": 0.04,
+        "true": 0.04,
+        "mean_violation": 0.0,
+        "share_violating": 0.0,
+        "mean_extra_cost": 0.0
+      }
+    ]
+  },
+  "margin": {
+    "underestimates": [
+      1.5,
+      2.0,
+      3.0
+    ],
+    "rows": [
+      {
+        "margin": 1.0,
+        "violation_by_underestimate": {
+          "1.5": 0.003762078208393088,
+          "2.0": 0.009223790372322892,
+          "3.0": 0.018061999331431485
+        },
+        "share_by_underestimate": {
+          "1.5": 0.7708333333333334,
+          "2.0": 0.9166666666666666,
+          "3.0": 0.9583333333333334
+        },
+        "right_belief_mean_extra_cost": 0.0
+      },
+      {
+        "margin": 2.0,
+        "violation_by_underestimate": {
+          "1.5": 0.0,
+          "2.0": 1.0842021724855044e-19,
+          "3.0": 0.003762078208393088
+        },
+        "share_by_underestimate": {
+          "1.5": 0.0,
+          "2.0": 0.0,
+          "3.0": 0.7708333333333334
+        },
+        "right_belief_mean_extra_cost": 0.7471208455377805
+      },
+      {
+        "margin": 4.0,
+        "violation_by_underestimate": {
+          "1.5": 0.0,
+          "2.0": 0.0,
+          "3.0": 0.0
+        },
+        "share_by_underestimate": {
+          "1.5": 0.0,
+          "2.0": 0.0,
+          "3.0": 0.0
+        },
+        "right_belief_mean_extra_cost": 1.8457008640031474
+      }
+    ]
+  }
+}
