@@ -167,3 +167,15 @@ def test_rollout_sample_size_boundaries(hand_spec):
     policy = value_iteration(mdp).policy
     assert rollout(mdp, policy, 0, rng=0).n == 0
     assert rollout(mdp, policy, 1, rng=0).n == 1
+
+
+def test_text_size_limit_boundary(monkeypatch):
+    """The limit applies to valid maps: exactly at the limit is accepted, one over is not."""
+    from riskladder.env import parse_map, spec
+
+    text = "{}\n---\n#S.G#\n#...#"
+    monkeypatch.setattr(spec, "MAX_MAP_CHARS", len(text))
+    assert parse_map(text).layout.rows == 2
+    monkeypatch.setattr(spec, "MAX_MAP_CHARS", len(text) - 1)
+    with pytest.raises(MapError, match="longer than"):
+        parse_map(text)

@@ -1,0 +1,22 @@
+name: nightly
+
+# Slower checks that do not belong on every push: property tests with many more examples, and the
+# mutation check (do the tests notice deliberate bugs?). Run weekly or on demand.
+on:
+  schedule:
+    - cron: "0 18 * * 0"
+  workflow_dispatch:
+
+jobs:
+  deep-checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install
+        run: uv sync --locked
+      - name: Property tests with 200 examples each
+        run: uv run pytest --hypothesis-profile=thorough -p no:cacheprovider
+      - name: Mutation check
+        run: uv run python tools/mutation_check.py --jobs 2

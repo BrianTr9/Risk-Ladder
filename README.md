@@ -69,6 +69,8 @@ uv run pytest
 uv run ruff check . && uv run ruff format --check .
 ```
 
+The testing strategy (reference implementation, metamorphic and property tests, fuzzing, mutation check) is described in [docs/testing.md](docs/testing.md).
+
 ## License
 
 MIT
