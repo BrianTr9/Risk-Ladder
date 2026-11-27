@@ -50,6 +50,8 @@ A map file (`.map`) is a JSON header, a line containing only `---`, and the grid
 
 Optional header fields: `c_fail` (overrides `fail_multiplier`), `horizon` (overrides the default `H`). The same format is used by tests, experiments and the API.
 
+**Input validation.** `parse_map` raises `MapError` for every malformed input and never another exception type, so an API can map every failure to a client error. Header numbers must be finite real numbers (booleans, strings, `null`, NaN and infinities are rejected), `horizon` and `seed` must be integers (`horizon` between 1 and 10^7, `seed` within 64 bits), unknown keys are rejected at every level, and the text may not exceed 4 million characters or nest JSON deeper than the interpreter allows. The dataclasses `Noise`, `Costs` and `MapSpec` apply the same checks when built directly.
+
 ## 3. Actions
 
 Eight actions with a fixed index order:
@@ -165,3 +167,4 @@ Default shield assumption: `p_max = 0.4`, the upper end of the supported `p_slip
 - v0.1.1: clarified that the learner boundary is an interface contract, not a hard guarantee (Phase 1).
 - v0.1.2: documented solver details, trapped cells, early-stopped evaluation and scale limits (Phase 2).
 - v0.1.3: absorbing outcomes described as implicit; dilemma generator rejects maps whose safe route is under 1.4x the corridor (verification pass).
+- v0.1.4: documented input validation; every malformed map input raises `MapError` (testing review).
