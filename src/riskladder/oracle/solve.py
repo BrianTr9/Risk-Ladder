@@ -99,18 +99,23 @@ def is_proper(mdp: Mdp, policy: Policy) -> bool:
     return bool(np.all(np.isfinite(dist[live])))
 
 
-def solve_policy(mdp: Mdp, policy: Policy) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def solve_policy(
+    mdp: Mdp, policy: Policy, live: np.ndarray | None = None, check: bool = True
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Unbounded-horizon `(V, P(success), P(fail))` of a proper policy by one sparse factorisation.
 
-    Values are 0 for trapped states, which no live state can reach.
+    Values are 0 for trapped states, which no live state can reach. Pass `live` to reuse a mask
+    computed earlier, and `check=False` to skip the properness test when it is already known.
     """
-    live = live_mask(mdp)
-    if not is_proper(mdp, policy):
+    live = live_mask(mdp) if live is None else live
+    if check and not is_proper(mdp, policy):
         raise ValueError("policy is improper: it does not terminate from every live state")
     n = mdp.n_states
     cost, p_success, p_fail = policy_vectors(mdp, policy)
     idx = np.flatnonzero(live)
-    P = policy_matrix(mdp, policy)[idx][:, idx]
+    P = policy_matrix(mdp, policy)
+    if len(idx) < n:  # drop trapped states; skip the slicing when every state is live
+        P = P[idx][:, idx]
     system = (sparse.identity(len(idx), format="csc") - P).tocsc()
     rhs = np.column_stack([cost[idx], p_success[idx], p_fail[idx]])
     solved = splu(system).solve(rhs)
@@ -159,13 +164,15 @@ def policy_iteration(mdp: Mdp, init: Policy | None = None, max_iter: int = 1000)
     n = mdp.n_states
     live = live_mask(mdp)
     policy = proper_policy(mdp) if init is None else np.asarray(init).copy()
+    if init is not None and not is_proper(mdp, policy):
+        raise ValueError("initial policy must be proper")
     arange = np.arange(n)
     converged = False
     V = np.zeros(n)
     iterations = 0
     while iterations < max_iter:
         iterations += 1
-        V, _, _ = solve_policy(mdp, policy)
+        V, _, _ = solve_policy(mdp, policy, live=live, check=False)  # improvement keeps it proper
         q = _greedy(mdp, V)
         best = q.min(axis=0)
         better = q[policy, arange] - best > _TOL_REL * np.maximum(1.0, np.abs(best))
