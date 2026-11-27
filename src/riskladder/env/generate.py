@@ -19,6 +19,7 @@ from riskladder.env.spec import Costs, MapSpec, Noise
 
 Grid = list[list[str]]
 MAX_ATTEMPTS = 200
+MIN_DETOUR_RATIO = 1.4  # the safe route must be at least this much longer than the corridor
 
 
 def generate(
@@ -41,8 +42,8 @@ def generate(
             layout = Layout(tuple("".join(line) for line in grid))
         except MapError:
             continue
-        if template == "dilemma" and not has_safe_route(layout):
-            continue  # scattered rocks closed the detour: the map would not be a dilemma
+        if template == "dilemma" and not is_dilemma(layout):
+            continue  # no safe detour, or one too short for the corridor to be a real choice
         return MapSpec(
             layout=layout,
             noise=noise or Noise(),
@@ -50,7 +51,10 @@ def generate(
             name=f"{template}-{rows}x{cols}-s{seed}",
             seed=seed,
         )
-    raise MapError(f"could not generate a valid {template} map in {MAX_ATTEMPTS} attempts")
+    raise MapError(
+        f"could not generate a valid {template} map of {rows} x {cols} cells in "
+        f"{MAX_ATTEMPTS} attempts (a dilemma needs enough rows for its detour: try a squarer map)"
+    )
 
 
 def _dilemma(rows: int, cols: int, rng: np.random.Generator, detour: float = 0.8) -> Grid:
@@ -133,6 +137,14 @@ def _scatter(
             dr, dc = ((-1, 0), (0, 1), (1, 0), (0, -1))[int(rng.integers(4))]
             if r0 <= r + dr < r1 and 1 <= c + dc < cols - 1:
                 r, c = r + dr, c + dc
+
+
+def is_dilemma(layout: Layout) -> bool:
+    """True if a hazard-free safe route exists and is clearly longer than the shortest route."""
+    r, c = layout.start
+    safe = steps_to_goal(layout, avoid_hazard_adjacent=True)[r, c]
+    short = steps_to_goal(layout)[r, c]
+    return bool(np.isfinite(safe) and safe >= MIN_DETOUR_RATIO * short)
 
 
 def has_safe_route(layout: Layout) -> bool:

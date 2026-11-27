@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from riskladder.env import MapError, generate, load_map, steps_to_goal
-from riskladder.env.generate import has_safe_route
+from riskladder.env.generate import TEMPLATES, has_safe_route, is_dilemma
 
 MAPS = Path(__file__).parents[1] / "experiments" / "maps"
 
@@ -59,3 +59,27 @@ def test_train_and_test_maps_are_disjoint():
 
 def test_map_error_is_a_value_error():
     assert issubclass(MapError, ValueError)
+
+
+@pytest.mark.parametrize("template", ["dilemma", "field"])
+@pytest.mark.parametrize(("rows", "cols"), [(10, 20), (15, 30), (40, 12), (25, 25)])
+def test_non_square_maps_are_valid(template, rows, cols):
+    for seed in range(5):
+        layout = generate(template, rows, cols, seed=seed).layout
+        assert (layout.rows, layout.cols) == (rows, cols)
+        if template == "dilemma":
+            assert is_dilemma(layout)
+
+
+def test_dilemma_that_cannot_be_built_is_rejected_loudly():
+    """A very wide, short map has no room for a long detour: fail, do not return a weak map."""
+    with pytest.raises(MapError, match="squarer"):
+        generate("dilemma", 10, 45, seed=0)
+
+
+def test_generation_gives_up_after_max_attempts(monkeypatch):
+    monkeypatch.setitem(
+        TEMPLATES, "broken", lambda rows, cols, rng: [["#"] * cols for _ in range(rows)]
+    )
+    with pytest.raises(MapError, match="could not generate"):
+        generate("broken", 10)

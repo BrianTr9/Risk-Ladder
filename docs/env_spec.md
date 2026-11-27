@@ -90,7 +90,7 @@ The failure indicator `1[FAIL]` is reported separately from cost. It is never fo
 
 ### 6.1 States
 
-The decision states are the passable cells (`.`, `S`, `~`) indexed in row-major order, plus two absorbing states `SUCCESS` and `FAIL` with zero cost. Goal and hazard cells are not decision states: entering them moves to the absorbing state.
+The decision states are the passable cells (`.`, `S`, `~`) indexed in row-major order, plus two absorbing outcomes, `SUCCESS` and `FAIL`, that cost nothing further. Goal and hazard cells are not decision states: entering one ends the episode. The absorbing outcomes are implicit: the exact model has no row for them (the missing probability mass of each row is the absorption probability), and the sampler refuses to step after an episode has ended.
 
 ### 6.2 Planning objective
 
@@ -164,3 +164,4 @@ Default shield assumption: `p_max = 0.4`, the upper end of the supported `p_slip
 - v0.1: initial specification (Phase 0).
 - v0.1.1: clarified that the learner boundary is an interface contract, not a hard guarantee (Phase 1).
 - v0.1.2: documented solver details, trapped cells, early-stopped evaluation and scale limits (Phase 2).
+- v0.1.3: absorbing outcomes described as implicit; dilemma generator rejects maps whose safe route is under 1.4x the corridor (verification pass).
