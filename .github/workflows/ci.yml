@@ -18,3 +18,41 @@ jobs:
           uv run ruff format --check .
       - name: Test (branch coverage gate)
         run: uv run pytest --cov -m "slow or not slow"
+
+  docker:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Record the commit in the image
+        run: echo "$GITHUB_SHA" > COMMIT_SHA
+      - name: Build the image
+        run: docker build -t riskladder-api .
+      - name: Start the container
+        run: docker run -d --name api -p 7860:7860 riskladder-api
+      - name: Wait for the API
+        run: |
+          for i in $(seq 1 30); do curl -sf localhost:7860/health && exit 0; sleep 1; done
+          docker logs api
+          exit 1
+      - name: Smoke test the running container (golden plan, round trip, p95 latency)
+        run: python3 scripts/smoke_api.py --url http://localhost:7860 --commit "$GITHUB_SHA"
+      - name: Container logs
+        if: failure()
+        run: docker logs api
+
+  deploy:
+    needs: docker
+    # Runs only on main and only once a Space is configured (repository variable HF_SPACE and
+    # secret HF_TOKEN); until then the pipeline stops after the container check.
+    if: github.ref == 'refs/heads/main' && vars.HF_SPACE != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Upload, wait for this commit and smoke test the Space
+        run: uv run --no-project --with huggingface_hub python scripts/deploy_space.py
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
+          COMMIT: ${{ github.sha }}

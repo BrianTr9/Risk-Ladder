@@ -188,3 +188,4 @@ The calibration was done with the oracle (`value_iteration` over a sweep of fail
 - v0.1.4: documented input validation; every malformed map input raises `MapError` (testing review).
 - v0.1.5: added the `ridge` template and the risk-experiment configuration (Phase 3).
 - v0.1.6: described the penalty planner and the CMDP solver (Phase 3).
+- v0.1.7: documented the service limits and the API (Phase 3); see docs/api.md.
