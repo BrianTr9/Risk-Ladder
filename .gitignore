@@ -1,0 +1,21 @@
+# Private planning notes (never published)
+z_*.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+
+# Experiment outputs that are regenerated (summaries and figures are committed)
+results/raw/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
