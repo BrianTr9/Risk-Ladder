@@ -93,3 +93,26 @@ def test_policy_iteration_rejects_an_improper_initial_policy():
     mdp = build_model(load_map(MAPS[0]))
     with pytest.raises(ValueError, match="initial policy"):
         policy_iteration(mdp, init=np.full(mdp.n_states, MOVE_N))
+
+
+def test_value_iteration_reports_non_convergence():
+    mdp = build_model(load_map(MAPS[0]))
+    stopped = value_iteration(mdp, max_iter=3)
+    assert stopped.iterations == 3 and not stopped.converged and stopped.residual > 1e-9
+    assert value_iteration(mdp, max_iter=0).iterations == 0  # no sweep at all is still well-formed
+
+
+def test_policy_iteration_reports_non_convergence():
+    mdp = build_model(load_map(MAPS[0]))
+    stopped = policy_iteration(mdp, max_iter=1)  # the proper starting policy is not optimal
+    assert stopped.iterations == 1 and not stopped.converged
+    assert policy_iteration(mdp).converged
+
+
+def test_policy_iteration_from_the_optimum_is_idempotent():
+    """Started at pi*, one evaluation finds nothing to improve."""
+    mdp = build_model(load_map(MAPS[0]))
+    optimum = policy_iteration(mdp)
+    again = policy_iteration(mdp, init=optimum.policy)
+    assert again.iterations == 1 and again.converged
+    np.testing.assert_array_equal(again.policy, optimum.policy)

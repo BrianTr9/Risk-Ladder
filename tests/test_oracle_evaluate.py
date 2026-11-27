@@ -65,12 +65,26 @@ def test_early_stop_matches_the_full_series():
 
 
 def test_start_restriction_matches_full_evaluation():
-    mdp = build_model(load_map(MAPS[0]))
+    """Restricting to the states reachable from the start changes no value, only hides the rest."""
+    mdp = build_model(
+        load_map(MAPS[0])
+    )  # a dilemma map: the optimal policy never visits most cells
     policy = value_iteration(mdp).policy
     full = evaluate(mdp, policy)
     restricted = evaluate(mdp, policy, start=mdp.start)
-    assert restricted.at(mdp.start).cost == pytest.approx(full.at(mdp.start).cost, abs=1e-10)
-    assert np.isnan(restricted.cost).sum() > 0 or restricted.cost.size == full.cost.size
+
+    seen = ~np.isnan(restricted.cost)
+    assert seen[mdp.start]
+    assert 0 < seen.sum() < mdp.n_states  # some, but not all, states are reachable
+    for name in ("cost", "p_success", "p_fail"):
+        assert np.array_equal(np.isnan(getattr(restricted, name)), ~seen)
+        np.testing.assert_allclose(
+            getattr(restricted, name)[seen], getattr(full, name)[seen], atol=1e-10
+        )
+    # the reachable set is closed under the policy: every possible successor is evaluated too
+    rows = mdp.P_stack[policy * mdp.n_states + np.arange(mdp.n_states)]
+    for s in np.flatnonzero(seen):
+        assert seen[rows[s].indices].all()
 
 
 def test_probabilities_sum_to_one_for_a_random_policy():
