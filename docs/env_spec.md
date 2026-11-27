@@ -134,7 +134,7 @@ A mixture policy (pick `π_i` with weight `w_i` once at the start of an episode)
 | Learner (`SampleEnv`) | yes | no | no (observed only through sampled costs) | no |
 | Safety shield | yes | upper bound `p_max` only | no | no |
 
-The learner interface exposes the map, the start, the goals, the action set, `H` and `step()`. It does not expose noise or costs, and this is enforced by the type of the object, not by convention. Features and reward shaping that need a distance use deterministic **step** distances on the map, which require no hidden values. Any potential function preserves the optimal policy under potential-based shaping, so this choice is safe.
+The learner interface (`SampleEnv`) exposes the map, the start, the goals, the action set, `H`, `reset()` and `step()`. It has no `model()` and no noise or cost attributes. Python cannot make the wrapped environment truly private, so this boundary is an interface contract: agent code uses only the public interface, and a test checks that the hidden attributes are absent. Features and reward shaping that need a distance use deterministic **step** distances on the map, which require no hidden values. Any potential function preserves the optimal policy under potential-based shaping, so this choice is safe.
 
 Default shield assumption: `p_max = 0.4`, the upper end of the supported `p_slip` range.
 
@@ -153,3 +153,4 @@ Default shield assumption: `p_max = 0.4`, the upper end of the supported `p_slip
 ## Changelog
 
 - v0.1: initial specification (Phase 0).
+- v0.1.1: clarified that the learner boundary is an interface contract, not a hard guarantee (Phase 1).
