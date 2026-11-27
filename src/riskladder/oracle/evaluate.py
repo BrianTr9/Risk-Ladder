@@ -43,6 +43,8 @@ def evaluate(
     """
     n = mdp.n_states
     horizon = mdp.horizon if horizon is None else horizon
+    if horizon < 1:
+        raise ValueError("horizon must be at least 1")
     P = policy_matrix(mdp, policy)
     b = np.column_stack(policy_vectors(mdp, policy))
 
@@ -54,17 +56,15 @@ def evaluate(
         P = P[keep][:, keep]
         b = b[keep]
 
-    total = np.zeros_like(b)
+    total = b.copy()
     term = b
-    steps = 0
-    for k in range(horizon):
-        total += term
-        steps = k + 1
-        if k == horizon - 1:
-            break
+    steps = 1  # terms summed so far
+    while steps < horizon:
         term = P @ term
-        if tol > 0 and (horizon - 1 - k) * np.abs(term).max() <= tol:
+        if tol > 0 and (horizon - steps) * np.abs(term).max() <= tol:
             break
+        total += term
+        steps += 1
 
     if keep is None:
         full = total

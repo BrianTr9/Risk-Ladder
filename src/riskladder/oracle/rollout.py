@@ -55,6 +55,8 @@ def rollout(
     table = np.stack([pi for _, pi in parts])
     choice = rng.choice(len(parts), size=n, p=[w for w, _ in parts])
     horizon = mdp.horizon if horizon is None else horizon
+    if horizon < 1:
+        raise ValueError("horizon must be at least 1")
     cumulative = np.cumsum(mdp.branch_prob, axis=1)
 
     state = np.full(n, mdp.start if start is None else start)

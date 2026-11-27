@@ -6,12 +6,11 @@ import numpy as np
 import pytest
 
 import reference as ref
+from helpers import STATUS, assert_same, merged, model_outcomes
 from riskladder.env import Costs, Layout, MapSpec, Noise, build_model, generate, load_map, outcomes
-from riskladder.env.dynamics import FAIL, RUNNING, SUCCESS
 from riskladder.oracle import Oracle, evaluate, policy_iteration, value_iteration
 
 MAPS = sorted((Path(__file__).parents[1] / "experiments" / "maps").rglob("*.map"))
-STATUS = {RUNNING: "running", SUCCESS: "success", FAIL: "fail"}
 OTHER_NOISE = Noise(p_slip=0.3, dash_slip_mult=1.5)
 OTHER_COSTS = Costs(move=0.8, dash=1.1, rough_extra=2.5, collision=0.5)
 
@@ -26,20 +25,6 @@ def specs_under_test(hand_spec):
                 f"{template}-{seed}-other",
                 MapSpec(base.layout, noise=OTHER_NOISE, costs=OTHER_COSTS, fail_multiplier=3.0),
             )
-
-
-def merged(items):
-    out = {}
-    for end, cost, status, p in items:
-        key = (tuple(int(v) for v in end), round(float(cost), 9), status)
-        out[key] = out.get(key, 0.0) + float(p)
-    return out
-
-
-def assert_same(actual, expected):
-    assert set(actual) == set(expected)
-    for key in expected:
-        assert actual[key] == pytest.approx(expected[key], abs=1e-12), key
 
 
 @pytest.mark.parametrize("path", MAPS, ids=lambda p: p.stem)
@@ -69,16 +54,11 @@ def test_vectorised_model_matches_the_reference(hand_spec):
         mdp = build_model(spec)
         for s, cell in enumerate(map(tuple, mdp.cells)):
             for action in range(8):
-                items = []
-                for b in range(3):
-                    nxt = int(mdp.branch_next[s, action, b])
-                    end = tuple(mdp.branch_cell[s, action, b])
-                    status = "success" if nxt == -1 else "fail" if nxt == -2 else "running"
-                    items.append(
-                        (end, mdp.branch_cost[s, action, b], status, mdp.branch_prob[action, b])
-                    )
-                items = [i for i in items if i[3] > 0]
-                assert_same(merged(items), ref.outcomes(spec, cell, action)), (name, cell, action)
+                assert_same(
+                    model_outcomes(mdp, s, action),
+                    ref.outcomes(spec, cell, action),
+                    (name, cell, action),
+                )
 
 
 def small_spec():
