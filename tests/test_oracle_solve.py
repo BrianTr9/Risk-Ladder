@@ -87,3 +87,9 @@ def test_policy_iteration_from_a_given_start():
     reference = policy_iteration(mdp)
     again = policy_iteration(mdp, init=proper_policy(mdp))
     np.testing.assert_allclose(again.V, reference.V, atol=1e-9)
+
+
+def test_policy_iteration_rejects_an_improper_initial_policy():
+    mdp = build_model(load_map(MAPS[0]))
+    with pytest.raises(ValueError, match="initial policy"):
+        policy_iteration(mdp, init=np.full(mdp.n_states, MOVE_N))

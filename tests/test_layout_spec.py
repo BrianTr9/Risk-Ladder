@@ -1,6 +1,16 @@
 import pytest
 
-from riskladder.env import Costs, Layout, MapError, MapSpec, Noise, format_map, parse_map
+from riskladder.env import (
+    Costs,
+    Layout,
+    MapError,
+    MapSpec,
+    Noise,
+    format_map,
+    load_map,
+    parse_map,
+    save_map,
+)
 from riskladder.env.layout import ROCK
 
 
@@ -62,3 +72,31 @@ def test_map_format_errors():
         parse_map("{}\n#S.G#")
     with pytest.raises(MapError, match="unknown header keys"):
         parse_map('{"speed": 3}\n---\n#S.G#')
+
+
+def test_spec_validation(hand_spec):
+    layout = hand_spec.layout
+    with pytest.raises(MapError):
+        Costs(rough_extra=-1.0)
+    with pytest.raises(MapError):
+        Costs(collision=-0.1)
+    with pytest.raises(MapError):
+        MapSpec(layout, fail_multiplier=0.0)
+    with pytest.raises(MapError):
+        MapSpec(layout, c_fail_override=-1.0)
+    with pytest.raises(MapError):
+        MapSpec(layout, horizon_override=0)
+
+
+def test_failure_cost_ignores_regions_unreachable_from_start():
+    """D_max is taken over cells reachable from S, not over every cell that can reach a goal."""
+    layout = Layout.from_text("#S.G###\n#######\n#.....G")
+    # S is 2 steps from its goal; the sealed corridor below has a cell 5 steps from its own goal.
+    assert MapSpec(layout).c_fail == 5 * 2 * 1.0
+
+
+def test_map_file_round_trip_with_overrides(tmp_path, hand_spec):
+    spec = MapSpec(hand_spec.layout, c_fail_override=12.5, horizon_override=40, name="x", seed=1)
+    path = tmp_path / "x.map"
+    save_map(spec, path)
+    assert load_map(path) == spec

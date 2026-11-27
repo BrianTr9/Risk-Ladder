@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from riskladder.env import build_model, generate, load_map
+from riskladder.env import Noise, build_model, generate, load_map
 from riskladder.oracle import (
     Oracle,
     evaluate,
@@ -29,12 +29,11 @@ def test_optimal_policy_terminates_within_the_horizon(path):
     assert result.cost == pytest.approx(V[mdp.start], rel=1e-6)
 
 
-def test_noise_free_optimum_never_enters_a_hazard():
+@pytest.mark.parametrize("template", ["dilemma", "field"])
+def test_noise_free_optimum_never_enters_a_hazard(template):
     """c_fail makes losing the rover worse than any detour, so with p_slip = 0 nothing fails."""
     for seed in range(5):
-        spec = generate("dilemma", 20, seed=seed).with_noise(
-            type(generate("field", 10).noise)(p_slip=0.0)
-        )
+        spec = generate(template, 20, seed=seed).with_noise(Noise(p_slip=0.0))
         mdp = build_model(spec)
         solution = value_iteration(mdp)
         result = evaluate(mdp, solution.policy, start=mdp.start).at(mdp.start)

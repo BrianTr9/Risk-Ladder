@@ -101,3 +101,10 @@ def test_seeded_sampler_is_reproducible(hand_spec):
         return out
 
     assert trajectory(5) == trajectory(5)
+
+
+def test_model_interface_returns_the_exact_model(hand_spec):
+    env = RoverEnv(hand_spec, seed=0)
+    mdp = env.model()
+    assert mdp is env.model() and mdp.n_states == 8 and mdp.spec == hand_spec
+    assert not hasattr(env.sample_interface(), "model")
