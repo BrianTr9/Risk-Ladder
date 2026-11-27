@@ -155,7 +155,7 @@ def test_the_agent_and_the_environment_use_independent_random_streams():
 def test_unknown_agents_are_named_in_the_error():
     with pytest.raises(ValueError, match="unknown agent"):
         run(RunSpec("nope", "x.map", 0, 10))
-    assert set(AGENTS) == {"q", "sarsa", "linear"}
+    assert set(AGENTS) == {"q", "sarsa", "linear", "mb_count", "mb_struct"}
 
 
 def test_mean_and_interval_follow_the_t_distribution():

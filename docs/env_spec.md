@@ -190,3 +190,4 @@ The calibration was done with the oracle (`value_iteration` over a sweep of fail
 - v0.1.6: described the penalty planner and the CMDP solver (Phase 3).
 - v0.1.7: documented the service limits and the API (Phase 3); see docs/api.md.
 - v0.1.8: documented the learner interface, the map-only features and the training harness (Phase 4); see docs/learning.md.
+- v0.1.9: documented the shield, shaping and the model-based learners (Phase 5); see docs/learning.md.

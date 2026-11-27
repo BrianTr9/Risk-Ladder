@@ -11,12 +11,19 @@ import numpy as np
 from scipy import stats
 
 from riskladder.agents.linear import LinearQ
+from riskladder.agents.model_based import MBCount, MBStruct
 from riskladder.agents.tabular import SARSA, QLearning
 from riskladder.env import RoverEnv, load_map
 from riskladder.harness.scoring import Scorer
 from riskladder.harness.train import Checkpoint, train
 
-AGENTS = {"q": QLearning, "sarsa": SARSA, "linear": LinearQ}
+AGENTS = {
+    "q": QLearning,
+    "sarsa": SARSA,
+    "linear": LinearQ,
+    "mb_count": MBCount,
+    "mb_struct": MBStruct,
+}
 
 
 @dataclass(frozen=True)

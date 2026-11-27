@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from riskladder.env import RoverEnv
-from riskladder.oracle import Oracle, PolicyResult
+from riskladder.oracle import Mixture, Oracle, PolicyResult
 
 if TYPE_CHECKING:
     from riskladder.harness.train import Learner
@@ -54,11 +54,21 @@ class Scorer:
         """A learner counts as having learned the map once its regret is at most this."""
         return self.tau * self.optimal.cost
 
-    def policy(self, learner: Learner) -> np.ndarray:
-        actions = np.asarray(learner.greedy(self.layout, self.mdp.cells), dtype=int)
+    def deployed(self, learner: Learner) -> np.ndarray | Mixture:
+        """What the learner would run: its greedy policy, or the mixture of policies (chosen once
+        per episode) when it plans with the constrained solver."""
+        if hasattr(learner, "mixture"):
+            parts = learner.mixture(self.layout, self.mdp.cells)
+            return tuple((float(w), self._checked(np.asarray(a, dtype=int))) for w, a in parts)
+        return self.policy(learner)
+
+    def _checked(self, actions: np.ndarray) -> np.ndarray:
         if actions.shape != (self.mdp.n_states,):
             raise ValueError("a learner must return one action per decision cell")
         return actions
 
+    def policy(self, learner: Learner) -> np.ndarray:
+        return self._checked(np.asarray(learner.greedy(self.layout, self.mdp.cells), dtype=int))
+
     def score(self, learner: Learner) -> Score:
-        return Score.of(self.oracle.evaluate(self.policy(learner)), self.optimal.cost)
+        return Score.of(self.oracle.evaluate(self.deployed(learner)), self.optimal.cost)

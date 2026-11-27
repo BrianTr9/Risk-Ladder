@@ -14,8 +14,9 @@ from __future__ import annotations
 import numpy as np
 
 from riskladder.agents.features import N_FEATURES, feature_table
-from riskladder.env.dynamics import N_ACTIONS
+from riskladder.agents.priors import Priors, explore, masked
 from riskladder.env.layout import Layout
+from riskladder.safety.shield import Shield
 
 
 class LinearQ:
@@ -28,6 +29,9 @@ class LinearQ:
         eps_start: float = 1.0,
         eps_end: float = 0.05,
         eps_fraction: float = 0.5,
+        shield: Shield | dict | None = None,
+        shaping: float | None = None,
+        shield_at_run: bool = True,
     ) -> None:
         if not 0.0 < alpha <= 1.0:
             raise ValueError("alpha must be in (0, 1]")
@@ -39,9 +43,10 @@ class LinearQ:
             raise ValueError("eps_fraction must be in (0, 1]")
         self.alpha, self.alpha_decay = alpha, alpha_decay
         self.eps_start, self.eps_end, self.eps_fraction = eps_start, eps_end, eps_fraction
+        self.priors = Priors(shield, shaping, shield_at_run)
         self.config = {
             "alpha": alpha, "alpha_decay": alpha_decay, "eps_start": eps_start,
-            "eps_end": eps_end, "eps_fraction": eps_fraction,
+            "eps_end": eps_end, "eps_fraction": eps_fraction, **self.priors.config,
         }  # fmt: skip
         self.w = np.zeros(N_FEATURES)
         self._tables: dict[int, tuple[Layout, np.ndarray]] = {}
@@ -62,16 +67,22 @@ class LinearQ:
         self.start_episode(layout)
 
     def start_episode(self, layout: Layout) -> None:
+        self.layout = layout
         self._phi = self.table(layout)
+        self._allowed = self.priors.allowed(layout)
+
+    def _allowed_at(self, cell: tuple[int, int]) -> np.ndarray | None:
+        return None if self._allowed is None else self._allowed[cell]
 
     def epsilon(self) -> float:
         frac = min(1.0, self.t / self._ramp)
         return self.eps_start + (self.eps_end - self.eps_start) * frac
 
     def act(self, cell: tuple[int, int]) -> int:
+        allowed = self._allowed_at(cell)
         if self.rng.random() < self.epsilon():
-            return int(self.rng.integers(N_ACTIONS))
-        return int(np.argmin(self._phi[cell] @ self.w))
+            return explore(self.rng, allowed)
+        return int(np.argmin(masked(self._phi[cell] @ self.w, allowed)))
 
     def observe(
         self,
@@ -84,13 +95,23 @@ class LinearQ:
     ) -> None:
         self.t += 1
         phi = self._phi[(*cell, action)]
-        # Costs are never negative, so no cost-to-go is either: the clamp keeps the bootstrap
-        # from chasing an extrapolation that dips below zero, which makes the weights diverge.
-        best = max(0.0, float((self._phi[next_cell] @ self.w).min()))
-        target = cost if terminated else cost + best
+        cost = self.priors.shape(self.layout, cell, next_cell, cost, terminated)
+        if terminated:
+            target = cost
+        else:
+            # A cost-to-go is never below the lowest value the potential allows (zero without
+            # shaping): the clamp keeps the bootstrap from chasing an extrapolation beneath it,
+            # which makes the weights diverge.
+            potential = self.priors.potential(self.layout)
+            floor = 0.0 if potential is None else -float(potential[next_cell])
+            q_next = masked(self._phi[next_cell] @ self.w, self._allowed_at(next_cell))
+            target = cost + max(floor, float(q_next.min()))
         step = self.alpha / (1.0 + self.alpha_decay * self.t)
         self.w += step * (target - phi @ self.w) * phi / (phi @ phi + 1e-8)
 
     def greedy(self, layout: Layout, cells: np.ndarray) -> np.ndarray:
         q = self.table(layout)[cells[:, 0], cells[:, 1]] @ self.w
+        allowed = self.priors.run_allowed(layout)
+        if allowed is not None:
+            q = masked(q, allowed[cells[:, 0], cells[:, 1]])
         return np.argmin(q, axis=1)

@@ -1,6 +1,6 @@
 # Learners and the training harness
 
-How the three learners (tabular Q-learning, SARSA, linear Q) are trained and measured. The
+How the learners (tabular Q-learning, SARSA, linear Q, two model-based learners) are trained and measured, and the prior knowledge that can be switched on. The
 information boundary is in `env_spec.md` section 8: a learner receives `SampleEnv` and nothing else.
 
 ## The learner interface
@@ -70,3 +70,71 @@ those the same fit never times out.
 small grid, using only the 20 `field/train` maps (mean regret over the whole run). The choice is
 saved in `experiments/e4_config.json` and used by every later run; the `field/test` maps are never
 used for tuning.
+
+## Prior knowledge as switches
+
+Each of these is computed from the layout (and, for the shield, an assumed bound) alone, and can be
+turned on independently, which is what the ablation in experiment E1 needs.
+
+### Safety shield (`safety/shield.py`)
+
+The shield sees the map and an assumed upper bound `p_max` on the slip probability of any single
+action (default 0.4, the top of the supported range) and nothing else. For each cell and action it
+computes the worst-case probability of entering a hazard in one step (the intended branch with
+probability `1 - p_max`, each sideways slip with `p_max / 2`) and blocks the action when that exceeds
+`theta` (default 0.05). The blocked set is applied while training, to exploration and to the greedy
+choice alike, to the bootstrap target, and (optionally, `shield_at_run`) to the deployed policy.
+
+A shield can paint the rover into a corner, so it is built to never do that. For every cell it also
+finds the route to the goal whose riskiest step is smallest. A cell whose best route is riskier than
+`theta` gets its own threshold raised to exactly that risk, so the route stays open; such cells are
+reported (`ShieldTable.relaxed`). Entering such a cell is blocked, because the route from the cell
+before it needs no risk; being in one is allowed to continue. Every cell keeps at least one action
+and a route to the goal.
+
+What it does *not* do: it bounds the risk of each step, not the probability of failing over an
+episode. A rover that takes many steps just under the threshold can still fail often. That is the
+job of the constrained solver, not of a shield.
+
+### Reward shaping (`safety/shaping.py`)
+
+A potential `Phi(s) = scale * (hazard-free steps to the goal)`, zero in the absorbing outcomes. A
+transition costs `c + Phi(s') - Phi(s)`, so the shaped cost of an episode is the original minus
+`Phi(s0)`, whatever the policy did (Ng, Harada and Russell, 1999). Shaped and original values differ
+by the potential, so the best policy is unchanged; a test checks this against the oracle. The
+oracle always scores on the original cost. The scale does not affect correctness, only how much of
+the cost-to-go the potential already explains, so it is tuned (experiment E1) rather than read from
+the hidden step cost. Linear Q clamps its bootstrap at the lowest value the potential allows.
+
+## Model-based learners (`agents/model_based.py`)
+
+Both estimate a model from samples and plan on it with the exact solvers, replanning on a geometric
+schedule (each plan after 1.1 times as many steps as the last) so planning cost stays small.
+
+- **MB-count** keeps transition counts per (cell, action) and the mean sampled cost, and knows
+  nothing of the map. Exploration is optimism and nothing else: an action tried fewer than three
+  times is assumed to end the episode at no cost, so the plan is drawn to try it (R-max). It replans
+  at most every 1,000 steps. The plan that is scored is not optimistic: an untried action ends the
+  episode at ten times the dearest average cost seen, so the deployed plan avoids what it has not
+  learned. Two earlier designs failed and are worth knowing about. Optimism with replans on a
+  geometric schedule left most actions untried after 300,000 steps (the plan stood still while one
+  action after another was tried). Epsilon-greedy under the pessimistic model worked on four of six
+  dilemma maps and on the other two kept walking into a hazard for a million steps: pessimism
+  makes every route not yet tried look worse than the known bad one, and random steps rarely find
+  a long detour.
+- **MB-struct** knows the geometry (where the three branches of each action lead) and learns only
+  what is hidden: the slip probability of a move and of a dash, and five cost parameters (move,
+  dash, rough, collision, failure) by ridge regression on the sampled costs. When the next cell fits
+  more than one branch the observation is shared between them in proportion to the current slip
+  estimate. Every sample informs every cell, so it needs no exploration (epsilon is 0). Its prior
+  is one cost unit per step and nothing for the rest, so before the first failure it does not know
+  that a hazard is costly; it learns this from the first rovers it loses.
+- **MB-struct + CMDP** plans with the constrained solver under an upper confidence bound on the
+  slip probabilities (Wilson bound, capped at the assumed `p_max`), so the plan bounds the failure
+  probability by `delta` while the estimate is uncertain, and the bound tightens as data arrive.
+  Because the constraint is on a probability, the plan is safe even before the failure cost is
+  known. The deployed policy is a mixture of two policies chosen once per episode, which the
+  harness scores exactly.
+
+`MBCount` stores a dense `cells x actions x cells` table, so it is meant for maps of a few thousand
+cells at most.

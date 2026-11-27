@@ -11,8 +11,10 @@ from __future__ import annotations
 
 import numpy as np
 
+from riskladder.agents.priors import Priors, explore, masked
 from riskladder.env.dynamics import N_ACTIONS
 from riskladder.env.layout import Layout
+from riskladder.safety.shield import Shield
 
 
 class EpsilonGreedy:
@@ -28,6 +30,9 @@ class EpsilonGreedy:
         eps_end: float = 0.05,
         eps_fraction: float = 0.5,
         q_init: float = 0.0,
+        shield: Shield | dict | None = None,
+        shaping: float | None = None,
+        shield_at_run: bool = True,
     ) -> None:
         if not 0.0 < alpha <= 1.0:
             raise ValueError("alpha must be in (0, 1]")
@@ -40,9 +45,11 @@ class EpsilonGreedy:
         self.alpha, self.alpha_decay = alpha, alpha_decay
         self.eps_start, self.eps_end, self.eps_fraction = eps_start, eps_end, eps_fraction
         self.q_init = q_init
+        self.priors = Priors(shield, shaping, shield_at_run)
         self.config = {
             "alpha": alpha, "alpha_decay": alpha_decay, "eps_start": eps_start,
             "eps_end": eps_end, "eps_fraction": eps_fraction, "q_init": q_init,
+            **self.priors.config,
         }  # fmt: skip
 
     def begin(self, layout: Layout, budget_steps: int, rng: np.random.Generator) -> None:
@@ -52,6 +59,8 @@ class EpsilonGreedy:
         self.rng = rng
         self.t = 0
         self._ramp = max(1.0, self.eps_fraction * budget_steps)
+        self.layout = layout
+        self._allowed = self.priors.allowed(layout)
 
     def start_episode(self, layout: Layout) -> None:
         if (layout.rows, layout.cols) != self.shape:
@@ -61,10 +70,21 @@ class EpsilonGreedy:
         frac = min(1.0, self.t / self._ramp)
         return self.eps_start + (self.eps_end - self.eps_start) * frac
 
+    def _allowed_at(self, cell: tuple[int, int]) -> np.ndarray | None:
+        return None if self._allowed is None else self._allowed[cell]
+
+    def _best(self, cell: tuple[int, int]) -> float:
+        """Lowest cost-to-go among the actions the learner is allowed to take."""
+        return float(masked(self.Q[cell], self._allowed_at(cell)).min())
+
     def _choose(self, cell: tuple[int, int]) -> int:
+        allowed = self._allowed_at(cell)
         if self.rng.random() < self.epsilon():
-            return int(self.rng.integers(N_ACTIONS))
-        return int(np.argmin(self.Q[cell]))
+            return explore(self.rng, allowed)
+        return int(np.argmin(masked(self.Q[cell], allowed)))
+
+    def _shaped(self, cell, next_cell, cost: float, terminated: bool) -> float:
+        return self.priors.shape(self.layout, cell, next_cell, cost, terminated)
 
     def _update(self, cell: tuple[int, int], action: int, target: float) -> None:
         key = (*cell, action)
@@ -73,7 +93,11 @@ class EpsilonGreedy:
         self.Q[key] += step * (target - self.Q[key])
 
     def greedy(self, layout: Layout, cells: np.ndarray) -> np.ndarray:
-        return np.argmin(self.Q[cells[:, 0], cells[:, 1]], axis=1)
+        q = self.Q[cells[:, 0], cells[:, 1]]
+        allowed = self.priors.run_allowed(layout)
+        if allowed is not None:
+            q = masked(q, allowed[cells[:, 0], cells[:, 1]])
+        return np.argmin(q, axis=1)
 
 
 class QLearning(EpsilonGreedy):
@@ -94,7 +118,8 @@ class QLearning(EpsilonGreedy):
         truncated: bool,
     ) -> None:
         self.t += 1
-        target = cost if terminated else cost + float(self.Q[next_cell].min())
+        cost = self._shaped(cell, next_cell, cost, terminated)
+        target = cost if terminated else cost + self._best(next_cell)
         self._update(cell, action, target)
 
 
@@ -127,6 +152,7 @@ class SARSA(EpsilonGreedy):
         truncated: bool,
     ) -> None:
         self.t += 1
+        cost = self._shaped(cell, next_cell, cost, terminated)
         if terminated:
             self._update(cell, action, cost)
             return

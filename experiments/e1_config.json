@@ -1,0 +1,18 @@
+{
+  "shaping": 2.0,
+  "tuned_on": "dilemma seeds 100-104",
+  "scores": [
+    {
+      "shaping": 0.5,
+      "mean_regret": 3.2443846871305704
+    },
+    {
+      "shaping": 1.0,
+      "mean_regret": 3.0595806658285865
+    },
+    {
+      "shaping": 2.0,
+      "mean_regret": 2.4052269124981187
+    }
+  ]
+}

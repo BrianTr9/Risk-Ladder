@@ -122,6 +122,35 @@ E4: tabular Q-learning, SARSA and a linear Q-learner on map-only features learn 
 
 A linear learner with ten map-only features, trained across 20 other maps, reaches the same regret on a new map that Q-learning reaches after a median of 1.56 million steps on that map (it matches within 3 million steps on 15 of 20 maps). The honest limits: the linear learner stops improving at about 40% regret, so its features limit it rather than its samples; no learner reached 5% on most runs within 3 million steps; and the step sizes were tuned lightly on a small grid, with the best Q-learning and linear values at the edge of it. Reproduce with `uv run python -m experiments.e4`; see [docs/learning.md](docs/learning.md).
 
+### What prior knowledge buys back (E1)
+
+E1: eight ways to learn the ten 30 x 30 `dilemma` maps (5 seeds each, 1,000,000 steps, same budget and seeds for all), scored exactly by the oracle. Regret is a fraction of the optimal cost; "learned" means at most 5%.
+
+| Configuration | Rovers lost while learning | Final regret | Learned | Median steps to learn |
+|---|---|---|---|---|
+| Q | 1,252 ± 104 | 56.1% ± 50.6 | 12% | not reached |
+| SARSA | 168 ± 28 | 11.0% ± 3.3 | 72% | 600,000 |
+| Q + shaping | 2,815 ± 250 | 56.6% ± 46.7 | 24% | not reached |
+| Q + shield | 239 ± 17 | 41.8% ± 39.4 | 14% | not reached |
+| Q + shield + shaping | 764 ± 70 | 88.9% ± 81.8 | 28% | not reached |
+| MB-count (no map knowledge) | 270 ± 26 | 1.3% ± 0.2 | 100% | 120,000 |
+| MB-struct (knows the geometry) | 17 ± 2 | 0.0% ± 0.1 | 100% | 40,000 |
+| MB-struct + constrained planning | 1 ± 0 | 0.0% ± 0.1 | 100% | 40,000 |
+
+![Pareto](results/figures/e1_pareto.png)
+
+![Regret against steps](results/figures/e1_curves.png)
+
+What the numbers say, including the parts that did not go as planned:
+
+- Knowing the map's geometry and learning only the hidden slip probabilities and costs loses 98.7% fewer rovers than Q-learning (17 against 1,252) and learns in 40,000 steps; planning under a failure-probability bound loses one on average. A model-based learner that knows nothing of the map (MB-count) already beats every model-free variant on both axes, so most of the gain comes from planning on a learned model, and the map adds a further 16x fewer rovers lost.
+- The shield works as intended on its own: Q + shield loses 5x fewer rovers than Q (239 against 1,252). It bounds the risk of each step, not the probability of failing over an episode.
+- Shaping did **not** help here. Q + shaping lost more rovers than Q (2,815 against 1,252) and reached the same final regret, and the shaping scale chosen by tuning (2.0) sat at the edge of the grid. I have not isolated why; one candidate is that the potential pulls the learner along the shortest route, which on a dilemma map is the risky corridor. Shaping preserves the optimal policy (checked against the oracle) but not the safety of the learning process.
+- SARSA is the best model-free learner, in line with its on-policy caution near hazards; the tabular Q-learning intervals are wide because a minority of runs have not converged after a million steps.
+- On these maps the optimum already avoids the corridor, so the shield costs nothing in regret; on maps where the best policy accepts some risk it would.
+
+Reproduce with `uv run python -m experiments.e1`; see [docs/learning.md](docs/learning.md).
+
 ### The API
 
 `POST /plan` returns the cheapest policy with the failure probability bounded exactly, certified optimal by a dual bound; `POST /evaluate` scores a policy you bring. See [docs/api.md](docs/api.md) for the endpoints, limits, measured latency and deployment.
