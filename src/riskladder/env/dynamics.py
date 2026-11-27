@@ -1,7 +1,8 @@
 """Dynamics: the single source of truth for what an action does (docs/env_spec.md section 4).
 
-`move_many` is the only implementation of motion. It is vectorised over cells, so the exact model
-(every cell at once) and `outcomes` (one cell) run the same code.
+`walk_many` is the only implementation of motion (geometry) and `move_many` prices it. Both are
+vectorised over cells, so the exact model (every cell at once) and `outcomes` (one cell) run the
+same code.
 """
 
 from __future__ import annotations
@@ -10,7 +11,7 @@ from typing import NamedTuple
 
 import numpy as np
 
-from riskladder.env.layout import C_GOAL, C_HAZARD, C_ROCK, C_ROUGH, PAD
+from riskladder.env.layout import C_GOAL, C_HAZARD, C_ROCK, C_ROUGH, PAD, Layout
 from riskladder.env.spec import MapSpec
 
 # Episode status after a transition.
@@ -52,6 +53,48 @@ def branches(spec: MapSpec, action: int) -> tuple[tuple[str, float], ...]:
     return (act.direction, 1.0 - p), (cw, p / 2), (ccw, p / 2)
 
 
+class Walk(NamedTuple):
+    """Where a rover ends and what it touched; geometry only, so no costs are involved."""
+
+    rows: np.ndarray
+    cols: np.ndarray
+    status: np.ndarray  # RUNNING, SUCCESS or FAIL
+    rough: np.ndarray  # rough tiles entered
+    collided: np.ndarray  # bool: bumped into a rock
+
+
+def walk_many(
+    layout: Layout, rows: np.ndarray, cols: np.ndarray, direction: str, cells: int
+) -> Walk:
+    """Advance rovers at (rows, cols) up to `cells` cells in `direction` over the bare layout.
+
+    A rock stops the rover where it stands; a hazard or goal ends the episode on entry.
+    """
+    codes = layout.codes
+    dr, dc = DELTA[direction]
+    r = np.asarray(rows, dtype=np.int64) + PAD
+    c = np.asarray(cols, dtype=np.int64) + PAD
+    rough = np.zeros(r.shape, dtype=np.int64)
+    collided = np.zeros(r.shape, dtype=bool)
+    status = np.full(r.shape, RUNNING, dtype=np.int8)
+    active = np.ones(r.shape, dtype=bool)
+    for _ in range(cells):
+        nr, nc = r + dr, c + dc
+        tile = codes[nr, nc]
+        blocked = active & (tile == C_ROCK)
+        collided |= blocked
+        active &= ~blocked
+        r = np.where(active, nr, r)
+        c = np.where(active, nc, c)
+        hazard = active & (tile == C_HAZARD)
+        goal = active & (tile == C_GOAL)
+        rough += active & (tile == C_ROUGH)
+        status[hazard] = FAIL
+        status[goal] = SUCCESS
+        active &= ~(hazard | goal)
+    return Walk(r - PAD, c - PAD, status, rough, collided)
+
+
 def move_many(
     spec: MapSpec, rows: np.ndarray, cols: np.ndarray, direction: str, cells: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -59,30 +102,14 @@ def move_many(
 
     Returns (rows, cols, extra_cost, status). `extra_cost` excludes the base action cost.
     """
-    codes = spec.layout.codes
+    walk = walk_many(spec.layout, rows, cols, direction, cells)
     costs = spec.costs
-    dr, dc = DELTA[direction]
-    r = np.asarray(rows, dtype=np.int64) + PAD
-    c = np.asarray(cols, dtype=np.int64) + PAD
-    extra = np.zeros(r.shape)
-    status = np.full(r.shape, RUNNING, dtype=np.int8)
-    active = np.ones(r.shape, dtype=bool)
-    for _ in range(cells):
-        nr, nc = r + dr, c + dc
-        tile = codes[nr, nc]
-        blocked = active & (tile == C_ROCK)
-        extra[blocked] += costs.collision
-        active &= ~blocked
-        r = np.where(active, nr, r)
-        c = np.where(active, nc, c)
-        hazard = active & (tile == C_HAZARD)
-        goal = active & (tile == C_GOAL)
-        extra[active & (tile == C_ROUGH)] += costs.rough_extra
-        extra[hazard] += spec.c_fail
-        status[hazard] = FAIL
-        status[goal] = SUCCESS
-        active &= ~(hazard | goal)
-    return r - PAD, c - PAD, extra, status
+    extra = (
+        walk.collided * costs.collision
+        + walk.rough * costs.rough_extra
+        + (walk.status == FAIL) * spec.c_fail
+    )
+    return walk.rows, walk.cols, extra, walk.status
 
 
 def base_cost(spec: MapSpec, action: int) -> float:

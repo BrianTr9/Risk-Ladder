@@ -105,6 +105,23 @@ Planning with a margin: the believed slip is multiplied by the margin before pla
 
 A planner that believes the rover slips less than it does breaks the risk bound, by up to 13.7 percentage points in the worst cell; one that believes it slips more keeps the bound but pays for it. Planning with a safety margin on the slip probability removes the violation for an underestimate up to the margin and costs more when the estimate was right. Reproduce with `uv run python -m experiments.e2`.
 
+### Learning from samples (E4)
+
+E4: tabular Q-learning, SARSA and a linear Q-learner on map-only features learn the 20 held-out 30 x 30 `field` maps from sampled steps (3 seeds per map, 3,000,000 steps). Every checkpoint is scored exactly by the oracle, so regret has no evaluation noise. Regret is a fraction of the optimal cost; "learned" means at most 5%.
+
+| Agent | Regret after 3M steps | P(fail) | Runs that learned | Failures while training |
+|---|---|---|---|---|
+| Q-learning | 39.1% ± 17.2 | 1.8% | 12% | 57,234 |
+| SARSA | 85.0% ± 21.7 | 7.3% | 0% | 50,070 |
+| Linear Q, one map | 40.9% ± 12.0 | 5.3% | 22% | 61,815 |
+| Linear Q, trained on 20 other maps, **0 samples here** | 41.8% ± 11.3 | 3.2% | n/a | n/a |
+
+![Learning curves](results/figures/e4_curves.png)
+
+![Generalisation](results/figures/e4_generalisation.png)
+
+A linear learner with ten map-only features, trained across 20 other maps, reaches the same regret on a new map that Q-learning reaches after a median of 1.56 million steps on that map (it matches within 3 million steps on 15 of 20 maps). The honest limits: the linear learner stops improving at about 40% regret, so its features limit it rather than its samples; no learner reached 5% on most runs within 3 million steps; and the step sizes were tuned lightly on a small grid, with the best Q-learning and linear values at the edge of it. Reproduce with `uv run python -m experiments.e4`; see [docs/learning.md](docs/learning.md).
+
 ### The API
 
 `POST /plan` returns the cheapest policy with the failure probability bounded exactly, certified optimal by a dual bound; `POST /evaluate` scores a policy you bring. See [docs/api.md](docs/api.md) for the endpoints, limits, measured latency and deployment.

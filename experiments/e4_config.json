@@ -1,0 +1,163 @@
+{
+  "tuned_on": "field/train",
+  "scores": {
+    "q": [
+      {
+        "config": {
+          "alpha": 0.1,
+          "alpha_decay": 0.0
+        },
+        "mean_regret": 3.5079840591041647
+      },
+      {
+        "config": {
+          "alpha": 0.1,
+          "alpha_decay": 0.05
+        },
+        "mean_regret": 8.679137175817031
+      },
+      {
+        "config": {
+          "alpha": 0.3,
+          "alpha_decay": 0.0
+        },
+        "mean_regret": 2.6692914457039683
+      },
+      {
+        "config": {
+          "alpha": 0.3,
+          "alpha_decay": 0.05
+        },
+        "mean_regret": 8.20479940305718
+      },
+      {
+        "config": {
+          "alpha": 0.5,
+          "alpha_decay": 0.0
+        },
+        "mean_regret": 2.3107182772609227
+      },
+      {
+        "config": {
+          "alpha": 0.5,
+          "alpha_decay": 0.05
+        },
+        "mean_regret": 5.476834091099242
+      }
+    ],
+    "sarsa": [
+      {
+        "config": {
+          "alpha": 0.1,
+          "alpha_decay": 0.0
+        },
+        "mean_regret": 4.268271544872473
+      },
+      {
+        "config": {
+          "alpha": 0.1,
+          "alpha_decay": 0.05
+        },
+        "mean_regret": 10.975834872283043
+      },
+      {
+        "config": {
+          "alpha": 0.3,
+          "alpha_decay": 0.0
+        },
+        "mean_regret": 3.4658360546366986
+      },
+      {
+        "config": {
+          "alpha": 0.3,
+          "alpha_decay": 0.05
+        },
+        "mean_regret": 9.203416289810782
+      },
+      {
+        "config": {
+          "alpha": 0.5,
+          "alpha_decay": 0.0
+        },
+        "mean_regret": 5.493530474973818
+      },
+      {
+        "config": {
+          "alpha": 0.5,
+          "alpha_decay": 0.05
+        },
+        "mean_regret": 5.853706436300642
+      }
+    ],
+    "linear": [
+      {
+        "config": {
+          "alpha": 0.02,
+          "alpha_decay": 0.0
+        },
+        "mean_regret": 1.443922101498785
+      },
+      {
+        "config": {
+          "alpha": 0.02,
+          "alpha_decay": 1e-05
+        },
+        "mean_regret": 1.8914323401582627
+      },
+      {
+        "config": {
+          "alpha": 0.05,
+          "alpha_decay": 0.0
+        },
+        "mean_regret": 1.9863335823684192
+      },
+      {
+        "config": {
+          "alpha": 0.05,
+          "alpha_decay": 1e-05
+        },
+        "mean_regret": 1.8145715472112696
+      },
+      {
+        "config": {
+          "alpha": 0.1,
+          "alpha_decay": 0.0
+        },
+        "mean_regret": 2.910839320064686
+      },
+      {
+        "config": {
+          "alpha": 0.1,
+          "alpha_decay": 1e-05
+        },
+        "mean_regret": 1.5982903478369344
+      },
+      {
+        "config": {
+          "alpha": 0.3,
+          "alpha_decay": 0.0
+        },
+        "mean_regret": 3.897653687849169
+      },
+      {
+        "config": {
+          "alpha": 0.3,
+          "alpha_decay": 1e-05
+        },
+        "mean_regret": 2.880866841328465
+      }
+    ]
+  },
+  "q": {
+    "alpha": 0.5,
+    "alpha_decay": 0.0
+  },
+  "sarsa": {
+    "alpha": 0.3,
+    "alpha_decay": 0.0
+  },
+  "linear": {
+    "alpha": 0.02,
+    "alpha_decay": 0.0
+  }
+}

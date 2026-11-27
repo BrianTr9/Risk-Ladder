@@ -151,7 +151,7 @@ The CMDP solver finds the smallest multiplier whose Lagrangian policy meets the 
 | Learner (`SampleEnv`) | yes | no | no (observed only through sampled costs) | no |
 | Safety shield | yes | upper bound `p_max` only | no | no |
 
-The learner interface (`SampleEnv`) exposes the map, the start, the goals, the action set, `H`, `reset()` and `step()`. It has no `model()` and no noise or cost attributes. Python cannot make the wrapped environment truly private, so this boundary is an interface contract: agent code uses only the public interface, and a test checks that the hidden attributes are absent. Features and reward shaping that need a distance use deterministic **step** distances on the map, which require no hidden values. Any potential function preserves the optimal policy under potential-based shaping, so this choice is safe.
+The learner interface (`SampleEnv`) exposes the map, the start, the goals, the action set, `H`, `reset()` and `step()`. It has no `model()` and no noise or cost attributes. Python cannot make the wrapped environment truly private, so this boundary is an interface contract: agent code uses only the public interface, and a test checks that the hidden attributes are absent. Features and reward shaping that need a distance use deterministic **step** distances on the map, which require no hidden values. The geometry of an action (where each of its three branches would lead) is part of the action set and may be used; the branch probabilities may not (see docs/learning.md). Any potential function preserves the optimal policy under potential-based shaping, so this choice is safe.
 
 Default shield assumption: `p_max = 0.4`, the upper end of the supported `p_slip` range.
 
@@ -189,3 +189,4 @@ The calibration was done with the oracle (`value_iteration` over a sweep of fail
 - v0.1.5: added the `ridge` template and the risk-experiment configuration (Phase 3).
 - v0.1.6: described the penalty planner and the CMDP solver (Phase 3).
 - v0.1.7: documented the service limits and the API (Phase 3); see docs/api.md.
+- v0.1.8: documented the learner interface, the map-only features and the training harness (Phase 4); see docs/learning.md.
