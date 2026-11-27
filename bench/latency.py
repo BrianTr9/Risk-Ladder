@@ -1,10 +1,11 @@
 """Latency and memory of the oracle as the number of states grows.
 
-    uv run python -m bench.latency [--sizes 12 34 102 320 1002] [--pi-max-states 150000]
+    uv run python -m bench.latency [--sizes 12 34 102 320 1002] [--pi-max-states 150000] [--out DIR]
 
 Each size runs in its own subprocess so that peak memory is measured per size. The map is open
 terrain with sparse hazards, rocks and rough ground (`field` template), solved at the default noise.
-Writes results/bench.json, results/bench.md and results/figures/bench_latency.png.
+Writes bench.json, bench.md and figures/bench_latency.png to results/. Any run that is not the full
+default one writes to results/smoke/ instead, so it cannot overwrite the committed results.
 """
 
 from __future__ import annotations
@@ -25,6 +26,7 @@ ROOT = Path(__file__).parents[1]
 RESULTS = ROOT / "results"
 # Grid sides giving about 1e2, 1e3, 1e4, 1e5 and 1e6 decision states.
 DEFAULT_SIZES = (12, 34, 102, 320, 1002)
+DEFAULT_PI_MAX_STATES = 150_000
 TERRAIN = {"hazard_density": 0.02, "rock_density": 0.02, "rough_density": 0.05}
 
 
@@ -127,12 +129,20 @@ def plot(result: dict, path: Path) -> None:
     fig.savefig(path, dpi=150)
 
 
-def main() -> None:
+def default_out(sizes: list[int], pi_max_states: int) -> Path:
+    full = tuple(sizes) == DEFAULT_SIZES and pi_max_states == DEFAULT_PI_MAX_STATES
+    return RESULTS if full else RESULTS / "smoke"
+
+
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--sizes", type=int, nargs="+", default=list(DEFAULT_SIZES))
-    parser.add_argument("--pi-max-states", type=int, default=150_000)
+    parser.add_argument("--pi-max-states", type=int, default=DEFAULT_PI_MAX_STATES)
     parser.add_argument("--child", type=int, help="internal: run one size and print JSON")
-    args = parser.parse_args()
+    parser.add_argument(
+        "--out", type=Path, help="output folder (default: results/, or results/smoke/)"
+    )
+    args = parser.parse_args(argv)
 
     if args.child is not None:
         print(json.dumps(run_size(args.child, args.pi_max_states)))
@@ -158,11 +168,12 @@ def main() -> None:
         rows.append(json.loads(out.stdout.strip().splitlines()[-1]))
         print(f"done {size}x{size}: {rows[-1]['states']:,} states", flush=True)
     result = {"machine": machine(), "pi_max_states": args.pi_max_states, "rows": rows}
-    RESULTS.mkdir(exist_ok=True)
-    (RESULTS / "bench.json").write_text(json.dumps(result, indent=2) + "\n")
+    out = args.out or default_out(args.sizes, args.pi_max_states)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "bench.json").write_text(json.dumps(result, indent=2) + "\n")
     table = to_markdown(result)
-    (RESULTS / "bench.md").write_text(table)
-    plot(result, RESULTS / "figures" / "bench_latency.png")
+    (out / "bench.md").write_text(table)
+    plot(result, out / "figures" / "bench_latency.png")
     print(table)
 
 

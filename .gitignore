@@ -11,9 +11,12 @@ dist/
 .pytest_cache/
 .ruff_cache/
 .hypothesis/
+.coverage
+htmlcov/
 
 # Experiment outputs that are regenerated (summaries and figures are committed)
 results/raw/
+results/smoke/
 
 # OS / editors
 .DS_Store

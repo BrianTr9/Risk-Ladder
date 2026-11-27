@@ -9,3 +9,10 @@ def test_smallest_size_runs_and_solvers_agree():
     result = {"machine": latency.machine(), "rows": [row]}
     table = latency.to_markdown(result)
     assert "12x12" in table and "skipped" not in table
+
+
+def test_partial_runs_go_to_the_smoke_folder():
+    full = list(latency.DEFAULT_SIZES)
+    assert latency.default_out(full, latency.DEFAULT_PI_MAX_STATES) == latency.RESULTS
+    assert latency.default_out([12, 34], latency.DEFAULT_PI_MAX_STATES) == latency.RESULTS / "smoke"
+    assert latency.default_out(full, 1_000) == latency.RESULTS / "smoke"

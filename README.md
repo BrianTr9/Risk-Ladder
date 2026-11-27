@@ -33,15 +33,15 @@ Each rung removes one piece of knowledge from the agent.
 
 E0: exact evaluation vs Monte Carlo on `dilemma-30x30-s0.map` (shortest route (1-cell moves toward the goal)).
 
-Rollouts needed for a +-10% relative error at 95% confidence (coverage is measured over 20 repeated runs of that size).
+Rollouts needed for a +-10% relative error at 95% confidence (coverage is measured over 300 repeated runs of that size).
 
 | P(fail) exact | MC rollouts | MC time | Coverage | Oracle time | Speed-up |
 |---|---|---|---|---|---|
-| 0.1000 | 3,458 | 0.00 s | 95% | 0.2 ms | 17x |
-| 0.0100 | 38,032 | 0.04 s | 95% | 0.2 ms | 198x |
-| 0.0010 | 383,776 | 0.35 s | 95% | 0.2 ms | 2,037x |
+| 0.1000 | 3,458 | 0.00 s | 96% | 0.2 ms | 18x |
+| 0.0100 | 38,032 | 0.04 s | 95% | 0.2 ms | 196x |
+| 0.0010 | 383,776 | 0.36 s | 96% | 0.2 ms | 2,043x |
 
-The oracle returns the exact failure probability of a policy in about a fifth of a millisecond on this map. A Monte Carlo estimate needs a number of rollouts proportional to `1 / P(fail)` for the same relative accuracy, so the gap grows as risks get smaller. Both agree: the measured coverage of the +-10% interval is 95%. Reproduce with `uv run python -m experiments.e0`.
+The oracle returns the exact failure probability of a policy in about a fifth of a millisecond on this map. A Monte Carlo estimate needs a number of rollouts proportional to `1 / P(fail)` for the same relative accuracy, so the gap grows as risks get smaller. Both agree: the measured coverage of the +-10% interval matches the nominal 95% (Coverage column). Reproduce with `uv run python -m experiments.e0`.
 
 ### Oracle latency by map size
 

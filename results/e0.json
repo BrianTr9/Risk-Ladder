@@ -1,18 +1,18 @@
 {
   "map": "dilemma-30x30-s0.map",
   "policy": "shortest route (1-cell moves toward the goal)",
-  "replications": 20,
+  "replications": 300,
   "rows": [
     {
       "p_fail_exact": 0.1,
       "p_slip": 0.018884985941548024,
       "rollouts_needed": 3458,
       "rollouts_run": 3458,
-      "mc_seconds": 0.0034695840440690517,
-      "coverage_within_10pct": 0.95,
-      "oracle_ms": 0.20016683265566826,
-      "model_build_ms": 1.5680836513638496,
-      "speedup": 17.33346128345605,
+      "mc_seconds": 0.003563479520380497,
+      "coverage_within_10pct": 0.9566666666666667,
+      "oracle_ms": 0.19858358427882195,
+      "model_build_ms": 1.598833128809929,
+      "speedup": 17.944481832784234,
       "abs_diff_vs_linear_solve": 2.7755575615628914e-17
     },
     {
@@ -20,11 +20,11 @@
       "p_slip": 0.0018248327307155688,
       "rollouts_needed": 38032,
       "rollouts_run": 38032,
-      "mc_seconds": 0.03545499965548515,
-      "coverage_within_10pct": 0.95,
-      "oracle_ms": 0.1791035756468773,
-      "model_build_ms": 1.574791967868805,
-      "speedup": 197.95807832105288,
+      "mc_seconds": 0.03572133230045438,
+      "coverage_within_10pct": 0.9533333333333334,
+      "oracle_ms": 0.18225004896521568,
+      "model_build_ms": 1.6709575429558754,
+      "speedup": 196.001770662197,
       "abs_diff_vs_linear_solve": 3.469446951953614e-18
     },
     {
@@ -32,11 +32,11 @@
       "p_slip": 0.00018188433661623534,
       "rollouts_needed": 383776,
       "rollouts_run": 383776,
-      "mc_seconds": 0.3546604374423623,
-      "coverage_within_10pct": 0.95,
-      "oracle_ms": 0.1741456799209118,
-      "model_build_ms": 1.613999716937542,
-      "speedup": 2036.5732736145465,
+      "mc_seconds": 0.3565937913954258,
+      "coverage_within_10pct": 0.9566666666666667,
+      "oracle_ms": 0.17458247020840645,
+      "model_build_ms": 1.6094585880637169,
+      "speedup": 2042.552101420863,
       "abs_diff_vs_linear_solve": 0.0
     }
   ]

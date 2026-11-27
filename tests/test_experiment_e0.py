@@ -24,3 +24,10 @@ def test_quick_run_is_consistent():
     assert [round(r["p_fail_exact"], 4) for r in result["rows"]] == [0.1, 0.01, 0.001]
     assert all(r["abs_diff_vs_linear_solve"] < 1e-10 for r in result["rows"])
     assert "| 0.1000 |" in e0.to_markdown(result)
+
+
+def test_quick_runs_never_target_the_committed_results(tmp_path):
+    assert e0.default_out(quick=True) == e0.RESULTS / "smoke"
+    assert e0.default_out(quick=False) == e0.RESULTS
+    e0.main(["--quick", "--replications", "2", "--out", str(tmp_path)])
+    assert (tmp_path / "e0.json").exists() and (tmp_path / "e0.md").exists()

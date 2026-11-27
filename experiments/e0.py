@@ -1,13 +1,14 @@
 """E0: exact evaluation versus Monte Carlo (evidence for the oracle claim).
 
-    uv run python -m experiments.e0 [--replications 20] [--quick]
+    uv run python -m experiments.e0 [--replications 300] [--quick] [--out DIR]
 
 Fixed map and fixed policy (the shortest route, which runs beside the hazards). The slip probability
 is tuned so that the policy's true failure probability is 10%, 1% and 0.1%. For each level we report
 how many Monte Carlo rollouts are needed to estimate it within +-10% (relative) with 95% confidence,
 how long that takes, and how long the exact evaluation takes.
 
-Writes results/e0.json and results/e0.md.
+Writes e0.json and e0.md to results/ (a `--quick` run writes to results/smoke/ so that it can never
+overwrite the committed results; use `--out` to choose another folder).
 """
 
 from __future__ import annotations
@@ -75,7 +76,7 @@ def required_rollouts(p: float) -> int:
     return math.ceil(Z95**2 * (1.0 - p) / (p * REL_ERROR**2))
 
 
-def run(replications: int = 20, quick: bool = False) -> dict:
+def run(replications: int = 300, quick: bool = False) -> dict:
     spec = load_map(MAP)
     policy = shortest_route_policy(spec)
     rows = []
@@ -142,16 +143,24 @@ def to_markdown(result: dict) -> str:
     return head + "\n".join(lines) + "\n"
 
 
-def main() -> None:
+def default_out(quick: bool) -> Path:
+    return RESULTS / "smoke" if quick else RESULTS
+
+
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--replications", type=int, default=20)
+    parser.add_argument("--replications", type=int, default=300)
     parser.add_argument("--quick", action="store_true", help="cap rollouts at 20k (smoke test)")
-    args = parser.parse_args()
+    parser.add_argument(
+        "--out", type=Path, help="output folder (default: results/, or results/smoke/)"
+    )
+    args = parser.parse_args(argv)
     result = run(args.replications, args.quick)
-    RESULTS.mkdir(exist_ok=True)
-    (RESULTS / "e0.json").write_text(json.dumps(result, indent=2) + "\n")
+    out = args.out or default_out(args.quick)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "e0.json").write_text(json.dumps(result, indent=2) + "\n")
     table = to_markdown(result)
-    (RESULTS / "e0.md").write_text(table)
+    (out / "e0.md").write_text(table)
     print(table)
 
 
