@@ -1,7 +1,13 @@
 import numpy as np
 import pytest
+from hypothesis import settings
 
 from riskladder.env import Layout, MapSpec, Noise
+
+# Property tests: a small budget by default; `pytest --hypothesis-profile=thorough` digs deeper.
+settings.register_profile("default", max_examples=12, deadline=None)
+settings.register_profile("thorough", max_examples=200, deadline=None)
+settings.load_profile("default")
 
 # Small map whose outcomes can be worked out by hand.
 #   row 1: S . . X G

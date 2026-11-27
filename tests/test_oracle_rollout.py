@@ -1,14 +1,19 @@
 import numpy as np
 import pytest
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis import strategies as st
 
 from riskladder.env import FAIL, RUNNING, SUCCESS, Noise, RoverEnv, build_model, generate
 from riskladder.oracle import cvar, evaluate_mixture, rollout, value_iteration
 
 
-def z_score(estimate: float, exact: float, std: float, n: int) -> float:
-    return abs(estimate - exact) / max(std / np.sqrt(n), 1e-12)
+def agrees(estimate: float, exact: float, std: float, n: int) -> bool:
+    """Within 5 standard errors, plus a 1e-4 relative slack for zero-variance samples.
+
+    When every rollout is identical (p_slip near 0, or a policy that loops) the sample std is 0
+    although the exact value includes events of probability ~1e-9 or less.
+    """
+    return abs(estimate - exact) <= 5 * std / np.sqrt(n) + 1e-4 * max(1.0, abs(exact))
 
 
 def test_rollout_matches_exact_evaluation(hand_spec):
@@ -18,9 +23,9 @@ def test_rollout_matches_exact_evaluation(hand_spec):
     n = 100_000
     roll = rollout(mdp, policy, n, rng=7)
     assert 0.05 < exact.p_fail < 0.95
-    assert z_score(roll.cost.mean(), exact.cost, roll.cost.std(), n) < 5
+    assert agrees(roll.cost.mean(), exact.cost, roll.cost.std(), n)
     p = exact.p_fail
-    assert z_score(roll.rate(FAIL), p, np.sqrt(p * (1 - p)), n) < 5
+    assert agrees(roll.rate(FAIL), p, np.sqrt(p * (1 - p)), n)
     assert roll.rate(SUCCESS) + roll.rate(FAIL) + roll.rate(RUNNING) == pytest.approx(1.0)
 
 
@@ -31,7 +36,7 @@ def test_rollout_mixture_and_reproducibility(hand_spec):
     exact = evaluate_mixture(mdp, mix)
     n = 100_000
     roll = rollout(mdp, mix, n, rng=3)
-    assert z_score(roll.cost.mean(), exact.cost, roll.cost.std(), n) < 5
+    assert agrees(roll.cost.mean(), exact.cost, roll.cost.std(), n)
     again = rollout(mdp, mix, n, rng=3)
     np.testing.assert_array_equal(roll.cost, again.cost)
 
@@ -50,7 +55,7 @@ def test_rollout_uses_the_same_sampling_rule_as_the_env(hand_spec):
             cell, done = result.cell, result.terminated or result.truncated
         costs.append(total)
     roll = rollout(mdp, policy, 20_000, rng=12)
-    assert z_score(np.mean(costs), roll.cost.mean(), roll.cost.std(), 20_000) < 5
+    assert agrees(np.mean(costs), roll.cost.mean(), roll.cost.std(), 20_000)
 
 
 def test_rollout_truncates_at_the_horizon(hand_spec_deterministic):
@@ -85,7 +90,6 @@ def test_cvar_validation():
         cvar(np.arange(10.0), 1.0)
 
 
-@settings(max_examples=12, deadline=None)
 @given(
     seed=st.integers(0, 10_000),
     p_slip=st.floats(0.0, 0.3),
@@ -99,6 +103,6 @@ def test_exact_evaluation_matches_rollouts_on_random_maps(seed, p_slip, template
     exact = evaluate_mixture(mdp, policy)
     n = 10_000
     roll = rollout(mdp, policy, n, rng=seed)
-    assert z_score(roll.cost.mean(), exact.cost, roll.cost.std(), n) < 5
+    assert agrees(roll.cost.mean(), exact.cost, roll.cost.std(), n)
     for status, p in ((FAIL, exact.p_fail), (SUCCESS, exact.p_success), (RUNNING, exact.p_timeout)):
-        assert z_score(roll.rate(status), p, np.sqrt(max(p * (1 - p), 1e-9)), n) < 5
+        assert agrees(roll.rate(status), p, np.sqrt(max(p * (1 - p), 1e-9)), n)
