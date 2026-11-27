@@ -50,11 +50,19 @@ class CmdpSolution:
         return self.result.cost - self.lower_bound
 
 
-def _lagrangian(mdp: Mdp, lam: float, tol: float) -> tuple[Policy, float, float]:
-    """Optimal policy of the Lagrangian, its failure probability and its value at the start."""
-    solution = value_iteration(PenalizedMDP(mdp, lam), tol=tol)
+def _lagrangian(
+    mdp: Mdp, lam: float, tol: float, init: np.ndarray | None = None
+) -> tuple[Policy, float, float, np.ndarray]:
+    """Optimal policy of the Lagrangian, its failure probability, its value at the start and the
+    full value vector (to warm-start the next solve)."""
+    solution = value_iteration(PenalizedMDP(mdp, lam), tol=tol, init=init)
     result = evaluate_mixture(mdp, solution.policy)
-    return solution.policy, result.p_fail, float(solution.V[mdp.start])
+    return solution.policy, result.p_fail, float(solution.V[mdp.start]), solution.V
+
+
+def _finite(values: np.ndarray) -> np.ndarray:
+    """Trapped states carry an infinite value; a warm start must not."""
+    return np.where(np.isfinite(values), values, 0.0)
 
 
 def solve_cmdp(mdp: Mdp, delta: float, tol: float = 1e-10, max_iter: int = 200) -> CmdpSolution:
@@ -65,7 +73,7 @@ def solve_cmdp(mdp: Mdp, delta: float, tol: float = 1e-10, max_iter: int = 200) 
     def meets(fail: float) -> bool:
         return fail <= delta + FEASIBILITY_SLACK
 
-    policy, fail, value = _lagrangian(mdp, 0.0, tol)
+    policy, fail, value, warm = _lagrangian(mdp, 0.0, tol)
     if meets(fail):  # the bound does not bind
         result = evaluate_mixture(mdp, policy)
         return CmdpSolution(delta, ((1.0, policy),), result, 0.0, result.cost, True, policy)
@@ -73,7 +81,7 @@ def solve_cmdp(mdp: Mdp, delta: float, tol: float = 1e-10, max_iter: int = 200) 
 
     lam_hi = 1.0  # grow until the Lagrangian policy meets the bound
     while True:
-        hi_policy, hi_fail, hi_value = _lagrangian(mdp, lam_hi, tol)
+        hi_policy, hi_fail, hi_value, warm = _lagrangian(mdp, lam_hi, tol, _finite(warm))
         if meets(hi_fail):
             break
         lam_lo, lo_policy, lo_fail = lam_hi, hi_policy, hi_fail
@@ -92,7 +100,7 @@ def solve_cmdp(mdp: Mdp, delta: float, tol: float = 1e-10, max_iter: int = 200) 
         if lam_hi - lam_lo <= 1e-13 * max(1.0, lam_hi):
             break
         mid = 0.5 * (lam_lo + lam_hi)
-        policy, fail, value = _lagrangian(mdp, mid, tol)
+        policy, fail, value, warm = _lagrangian(mdp, mid, tol, _finite(warm))
         if meets(fail):
             lam_hi, hi_policy, hi_fail, hi_value = mid, policy, fail, value
         else:

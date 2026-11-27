@@ -131,15 +131,21 @@ def _greedy(mdp: Mdp, V: np.ndarray) -> np.ndarray:
     return (flat_cost + mdp.P_stack @ V).reshape(a, n)
 
 
-def value_iteration(mdp: Mdp, tol: float = 1e-9, max_iter: int = 1_000_000) -> Solution:
+def value_iteration(
+    mdp: Mdp, tol: float = 1e-9, max_iter: int = 1_000_000, init: np.ndarray | None = None
+) -> Solution:
     """Jacobi value iteration from V = 0; stops when the largest Bellman residual is below `tol`.
 
     The residual is not a bound on the error (undiscounted problems need roughly `residual` times
     the expected number of steps), so tests compare against the exact policy-iteration values.
+
+    `init` warm-starts from the values of a similar problem (for example the same map under a
+    slightly different failure penalty). Value iteration converges from any start when every
+    policy that never terminates has infinite cost, which positive step costs guarantee.
     """
     n = mdp.n_states
     live = live_mask(mdp)
-    V = np.zeros(n)
+    V = np.zeros(n) if init is None else np.where(live, np.asarray(init, dtype=float), 0.0)
     residual = np.inf
     iterations = 0
     while iterations < max_iter:
