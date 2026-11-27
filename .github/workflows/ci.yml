@@ -16,5 +16,5 @@ jobs:
         run: |
           uv run ruff check .
           uv run ruff format --check .
-      - name: Test
-        run: uv run pytest
+      - name: Test (branch coverage gate)
+        run: uv run pytest --cov

@@ -30,6 +30,7 @@ dev = [
     "hypothesis>=6.100",
     "pre-commit>=3.7",
     "matplotlib>=3.11.2",
+    "pytest-cov>=7.1.0",
 ]
 
 [build-system]
@@ -51,3 +52,12 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM", "NPY", "RUF"]
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-q"
+
+[tool.coverage.run]
+branch = true
+source = ["riskladder"]
+
+[tool.coverage.report]
+# A gate, not evidence of quality: the mutation check (tools/mutation_check.py) measures that.
+fail_under = 97
+show_missing = true

@@ -1,13 +1,18 @@
+import os
+
 import numpy as np
 import pytest
 from hypothesis import settings
 
 from riskladder.env import Layout, MapSpec, Noise
 
-# Property tests: a small budget by default; `pytest --hypothesis-profile=thorough` digs deeper.
+# Property tests. `ci` replays the same examples every run (a failure is reproducible and never
+# flaky); `default` draws fresh ones locally; `thorough` digs deeper (nightly job).
+#   pytest --hypothesis-profile=thorough
 settings.register_profile("default", max_examples=12, deadline=None)
+settings.register_profile("ci", max_examples=12, deadline=None, derandomize=True)
 settings.register_profile("thorough", max_examples=200, deadline=None)
-settings.load_profile("default")
+settings.load_profile("ci" if os.environ.get("CI") else "default")
 
 # Small map whose outcomes can be worked out by hand.
 #   row 1: S . . X G
