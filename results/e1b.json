@@ -1,0 +1,483 @@
+{
+  "tuned": {
+    "dilemma": {
+      "tuned_on": "dilemma seeds 100-104",
+      "scores": {
+        "q": {
+          "0.1": 8.95644898696331,
+          "0.3": 3.8355229026022437,
+          "0.5": 3.3433021580855176
+        },
+        "sarsa": {
+          "0.1": 8.571134484842087,
+          "0.3": 4.6834434166455,
+          "0.5": 5.2407539174815
+        },
+        "shaping": {
+          "0.25": 4.275987996376243,
+          "0.5": 4.396259799283854,
+          "1.0": 3.9136023623549563,
+          "2.0": 2.837737248406297
+        }
+      },
+      "q": {
+        "alpha": 0.5
+      },
+      "sarsa": {
+        "alpha": 0.3
+      },
+      "shaping": 2.0
+    },
+    "ridge": {
+      "tuned_on": "ridge seeds 3100-3103",
+      "scores": {
+        "q": {
+          "0.1": 6.282877244703223,
+          "0.3": 5.443201885414213,
+          "0.5": 4.999078404110082
+        },
+        "sarsa": {
+          "0.1": 8.13342635443296,
+          "0.3": 10.65325508532112,
+          "0.5": 11.755424724272181
+        },
+        "shaping": {
+          "0.25": 6.700890111591185,
+          "0.5": 7.287277951446577,
+          "1.0": 7.171107164954714,
+          "2.0": 5.186734761177636
+        }
+      },
+      "q": {
+        "alpha": 0.5
+      },
+      "sarsa": {
+        "alpha": 0.1
+      },
+      "shaping": 2.0
+    }
+  },
+  "families": {
+    "dilemma": {
+      "budget": 1000000,
+      "seeds": 5,
+      "maps": 10,
+      "configs": {
+        "Q": {
+          "train_failures": {
+            "mean": 1252.3,
+            "ci95": 103.84717906206492
+          },
+          "regret": {
+            "mean": 0.5613005993021853,
+            "ci95": 0.5064770611498712
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.12,
+          "learned_median": null,
+          "runs": 50
+        },
+        "Q + shield": {
+          "train_failures": {
+            "mean": 238.86,
+            "ci95": 17.00932316518265
+          },
+          "regret": {
+            "mean": 0.41828916056627746,
+            "ci95": 0.3936887590656997
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.14,
+          "learned_median": null,
+          "runs": 50
+        },
+        "SARSA": {
+          "train_failures": {
+            "mean": 168.46,
+            "ci95": 28.49829414327275
+          },
+          "regret": {
+            "mean": 0.10979182416997807,
+            "ci95": 0.03323326601988607
+          },
+          "p_fail": {
+            "mean": 0.00034155597722960134,
+            "ci95": 0.0006863824339340852
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.72,
+          "learned_median": 600000.0,
+          "runs": 50
+        },
+        "SARSA + shaping": {
+          "train_failures": {
+            "mean": 269.24,
+            "ci95": 33.01942071559587
+          },
+          "regret": {
+            "mean": 0.2139391591287234,
+            "ci95": 0.08236070431327414
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.08,
+          "learned_median": null,
+          "runs": 50
+        },
+        "SARSA + shield": {
+          "train_failures": {
+            "mean": 68.16,
+            "ci95": 6.589986218117873
+          },
+          "regret": {
+            "mean": 0.27073465182567874,
+            "ci95": 0.319277472541677
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.8,
+          "learned_median": 680000.0,
+          "runs": 50
+        },
+        "SARSA + shield + shaping": {
+          "train_failures": {
+            "mean": 113.84,
+            "ci95": 10.537341031465644
+          },
+          "regret": {
+            "mean": 0.3554792960848917,
+            "ci95": 0.4062512705943965
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.1,
+          "learned_median": null,
+          "runs": 50
+        },
+        "MB-struct + CMDP": {
+          "train_failures": {
+            "mean": 1.08,
+            "ci95": 0.07788344219501549
+          },
+          "regret": {
+            "mean": 0.00034786215141007355,
+            "ci95": 0.0006895338797833755
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 1.0,
+          "learned_median": 40000.0,
+          "runs": 50
+        }
+      }
+    },
+    "ridge": {
+      "budget": 300000,
+      "seeds": 3,
+      "maps": 12,
+      "configs": {
+        "Q": {
+          "train_failures": {
+            "mean": 7244.805555555556,
+            "ci95": 345.3112756284767
+          },
+          "regret": {
+            "mean": 0.2911418141178415,
+            "ci95": 0.2380779472016803
+          },
+          "p_fail": {
+            "mean": 0.012417384157521798,
+            "ci95": 0.0027220122378233125
+          },
+          "optimal_p_fail": 0.02988388654833715,
+          "learned_fraction": 0.3055555555555556,
+          "learned_median": null,
+          "runs": 36
+        },
+        "Q + shield": {
+          "train_failures": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "regret": {
+            "mean": 0.14992880535324643,
+            "ci95": 0.01589194565889805
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.02988388654833715,
+          "learned_fraction": 0.2777777777777778,
+          "learned_median": null,
+          "runs": 36
+        },
+        "SARSA": {
+          "train_failures": {
+            "mean": 4507.361111111111,
+            "ci95": 459.03291915442134
+          },
+          "regret": {
+            "mean": 4.377346421234609,
+            "ci95": 2.874445806073974
+          },
+          "p_fail": {
+            "mean": 0.021376956624787235,
+            "ci95": 0.005042954473072071
+          },
+          "optimal_p_fail": 0.02988388654833715,
+          "learned_fraction": 0.2777777777777778,
+          "learned_median": null,
+          "runs": 36
+        },
+        "SARSA + shaping": {
+          "train_failures": {
+            "mean": 4877.555555555556,
+            "ci95": 515.208476791059
+          },
+          "regret": {
+            "mean": 4.7059839046676295,
+            "ci95": 3.289627426988856
+          },
+          "p_fail": {
+            "mean": 0.021249167422101076,
+            "ci95": 0.005702280395286519
+          },
+          "optimal_p_fail": 0.02988388654833715,
+          "learned_fraction": 0.4722222222222222,
+          "learned_median": null,
+          "runs": 36
+        },
+        "SARSA + shield": {
+          "train_failures": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "regret": {
+            "mean": 0.08251042328709798,
+            "ci95": 0.013595825723854498
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.02988388654833715,
+          "learned_fraction": 0.25,
+          "learned_median": null,
+          "runs": 36
+        },
+        "SARSA + shield + shaping": {
+          "train_failures": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "regret": {
+            "mean": 0.08158396323738813,
+            "ci95": 0.012655391631335873
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.02988388654833715,
+          "learned_fraction": 0.2222222222222222,
+          "learned_median": null,
+          "runs": 36
+        },
+        "MB-struct + CMDP": {
+          "train_failures": {
+            "mean": 121.33333333333333,
+            "ci95": 5.597205742983586
+          },
+          "regret": {
+            "mean": 0.026753066371483558,
+            "ci95": 0.004988591809965705
+          },
+          "p_fail": {
+            "mean": 0.009646712872539877,
+            "ci95": 5.6164305055088516e-05
+          },
+          "optimal_p_fail": 0.02988388654833715,
+          "learned_fraction": 0.9166666666666666,
+          "learned_median": 12000.0,
+          "runs": 36
+        }
+      }
+    }
+  },
+  "slip_sweep": {
+    "budget": 1000000,
+    "seeds": 3,
+    "maps": 5,
+    "slips": {
+      "0.05": {
+        "Q": {
+          "train_failures": {
+            "mean": 2628.266666666667,
+            "ci95": 224.2082087340321
+          },
+          "regret": {
+            "mean": 0.24061791412023917,
+            "ci95": 0.07010518687017032
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.0,
+          "learned_median": null,
+          "runs": 15
+        },
+        "SARSA": {
+          "train_failures": {
+            "mean": 113.33333333333333,
+            "ci95": 12.688153697832531
+          },
+          "regret": {
+            "mean": 0.09685434057789571,
+            "ci95": 0.013263941796996848
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.5333333333333333,
+          "learned_median": 480000.0,
+          "runs": 15
+        },
+        "SARSA + shield": {
+          "train_failures": {
+            "mean": 9.866666666666667,
+            "ci95": 1.5644649426498194
+          },
+          "regret": {
+            "mean": 0.08987871610079753,
+            "ci95": 0.011382697140846783
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.4,
+          "learned_median": null,
+          "runs": 15
+        },
+        "MB-struct + CMDP": {
+          "train_failures": {
+            "mean": 1.0666666666666667,
+            "ci95": 0.14298577919452027
+          },
+          "regret": {
+            "mean": 2.6352180666348608e-08,
+            "ci95": 5.227016709231203e-08
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 1.0,
+          "learned_median": 40000.0,
+          "runs": 15
+        }
+      },
+      "0.3": {
+        "Q": {
+          "train_failures": {
+            "mean": 1403.8,
+            "ci95": 245.0058182346747
+          },
+          "regret": {
+            "mean": 0.37631192903770017,
+            "ci95": 0.07549972916256739
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.0,
+          "learned_median": null,
+          "runs": 15
+        },
+        "SARSA": {
+          "train_failures": {
+            "mean": 216.26666666666668,
+            "ci95": 30.306914430341575
+          },
+          "regret": {
+            "mean": 0.17930869525271728,
+            "ci95": 0.04742053837362453
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.2,
+          "learned_median": null,
+          "runs": 15
+        },
+        "SARSA + shield": {
+          "train_failures": {
+            "mean": 153.66666666666666,
+            "ci95": 14.206361119903844
+          },
+          "regret": {
+            "mean": 0.18652013462386877,
+            "ci95": 0.06070620301839081
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.13333333333333333,
+          "learned_median": null,
+          "runs": 15
+        },
+        "MB-struct + CMDP": {
+          "train_failures": {
+            "mean": 1.0,
+            "ci95": 0.0
+          },
+          "regret": {
+            "mean": 0.36592634681340663,
+            "ci95": 0.01915351739491434
+          },
+          "p_fail": {
+            "mean": 0.0,
+            "ci95": 0.0
+          },
+          "optimal_p_fail": 0.0,
+          "learned_fraction": 0.0,
+          "learned_median": null,
+          "runs": 15
+        }
+      }
+    }
+  }
+}

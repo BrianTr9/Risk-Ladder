@@ -74,7 +74,8 @@ def run(spec: RunSpec, scorer: Scorer | None = None, env: RoverEnv | None = None
     return {
         "agent": spec.agent, "config": learner.config, "map": Path(spec.map_path).stem,
         "seed": spec.seed, "budget": spec.budget, "tau": spec.tau,
-        "optimal_cost": scorer.optimal.cost, "threshold": scorer.threshold,
+        "optimal_cost": scorer.optimal.cost, "optimal_p_fail": scorer.optimal.p_fail,
+        "threshold": scorer.threshold,
         "learned_at": learned_at(rows, scorer.threshold), "checkpoints": rows,
     }  # fmt: skip
 
