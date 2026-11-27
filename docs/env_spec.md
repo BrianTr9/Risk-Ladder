@@ -137,6 +137,12 @@ A mixture policy (pick `π_i` with weight `w_i` once at the start of an episode)
 | Penalty baseline | minimise `E[cost] + λ_pen · P(fail)` | penalty planner |
 | Constrained (CMDP) | minimise `E[cost]` subject to `P(fail) ≤ δ` | CMDP planner, constrained model-based learner |
 
+### 7.1 Solving the constrained problem
+
+The penalty planner minimises `E[cost] + extra * P(fail)`. Because `E[cost]` already charges `c_fail` for a failure, the total price of a failure is `c_fail + extra`, and `extra = 0` is the environment's own optimum. It is the Lagrangian of the constrained problem with multiplier `extra`.
+
+The CMDP solver finds the smallest multiplier whose Lagrangian policy meets the bound `P(fail) <= delta` by bisection (each step is one value iteration and one exact evaluation). `P(fail)` falls in jumps as the multiplier grows, so the constrained optimum is a mixture of the last policy above the bound and the first below it, chosen once at the start of an episode with the weight that makes `P(fail) = delta` exactly. The solution carries a dual bound `V_lambda(start) - lambda * delta` on the cost of any policy that meets the bound; the gap to it is reported and is zero up to rounding when the mixture is optimal. A bound that no policy can meet (a hazard that cannot be avoided) is reported as infeasible rather than approximated.
+
 ## 8. Information available to each agent
 
 | Interface | Map tiles | Noise parameters | Cost values | Exact model |
@@ -181,3 +187,4 @@ The calibration was done with the oracle (`value_iteration` over a sweep of fail
 - v0.1.3: absorbing outcomes described as implicit; dilemma generator rejects maps whose safe route is under 1.4x the corridor (verification pass).
 - v0.1.4: documented input validation; every malformed map input raises `MapError` (testing review).
 - v0.1.5: added the `ridge` template and the risk-experiment configuration (Phase 3).
+- v0.1.6: described the penalty planner and the CMDP solver (Phase 3).
