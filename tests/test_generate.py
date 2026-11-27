@@ -3,12 +3,18 @@ from pathlib import Path
 import pytest
 
 from riskladder.env import MapError, generate, load_map, steps_to_goal
-from riskladder.env.generate import TEMPLATES, has_safe_route, is_dilemma
+from riskladder.env.generate import (
+    MIN_STRIPS,
+    TEMPLATES,
+    count_strips,
+    has_safe_route,
+    is_dilemma,
+)
 
 MAPS = Path(__file__).parents[1] / "experiments" / "maps"
 
 
-@pytest.mark.parametrize("template", ["dilemma", "field"])
+@pytest.mark.parametrize("template", ["dilemma", "field", "ridge"])
 def test_generation_is_deterministic(template):
     assert generate(template, 20, seed=11) == generate(template, 20, seed=11)
     assert generate(template, 20, seed=11).layout != generate(template, 20, seed=12).layout
@@ -43,11 +49,18 @@ def test_unknown_template():
 def test_committed_map_sets_match_the_generator():
     """experiments/maps must be reproducible from experiments/make_maps.py."""
     files = sorted(MAPS.rglob("*.map"))
-    assert len(files) == 50
+    assert len(files) == 62
     for path in files:
         spec = load_map(path)
         template = spec.name.split("-")[0]
-        regenerated = generate(template, spec.layout.rows, spec.layout.cols, seed=spec.seed)
+        regenerated = generate(
+            template,
+            spec.layout.rows,
+            spec.layout.cols,
+            seed=spec.seed,
+            noise=spec.noise,
+            costs=spec.costs,
+        )
         assert spec == regenerated, path.name
 
 
@@ -83,3 +96,32 @@ def test_generation_gives_up_after_max_attempts(monkeypatch):
     )
     with pytest.raises(MapError, match="could not generate"):
         generate("broken", 10)
+
+
+def test_ridge_maps_have_a_staircase_of_independent_choices():
+    for seed in range(30):
+        layout = generate("ridge", 6, 30, seed=seed).layout
+        assert layout.rows == 6 and layout.cols == 30
+        assert count_strips(layout) >= MIN_STRIPS
+        # every hazard strip has an alcove above the lane, and rock separates the alcoves
+        lane, hazards = layout.rows - 3, layout.grid[layout.rows - 2]
+        for c, ch in enumerate(hazards):
+            if ch == "X":
+                assert layout.grid[lane - 1][c] == "."
+        assert layout.grid[lane][1] == "S" and layout.grid[lane][layout.cols - 2] == "G"
+
+
+@pytest.mark.parametrize(("rows", "cols"), [(4, 30), (6, 19), (3, 10)])
+def test_ridge_rejects_too_small_maps(rows, cols):
+    with pytest.raises(ValueError, match="at least 5 rows"):
+        generate("ridge", rows, cols, seed=0)
+
+
+def test_taller_ridges_have_taller_alcoves():
+    layout = generate("ridge", 9, 40, seed=1).layout
+    heights = {
+        sum(1 for r in range(layout.rows - 3) if layout.grid[r][c] == ".")
+        for c in range(layout.cols)
+        if layout.grid[layout.rows - 2][c] == "X"
+    }
+    assert max(heights) > 1  # alcove heights vary up to rows - 4

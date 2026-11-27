@@ -161,6 +161,18 @@ Default shield assumption: `p_max = 0.4`, the upper end of the supported `p_slip
 | `δ` | 0.01 | log grid 0.001 to 0.3 |
 | Seeds per configuration | 10 | |
 
+### Risk experiments (E2, E3)
+
+The risk experiments use `ridge` maps rather than the generic defaults above. A ridge map is a corridor along a lava ridge: hazard strips of different lengths lie beside it, and each strip has an alcove that avoids it at a fixed price (up and back down). Because avoiding a long strip saves more risk for the same price, the strips are avoided one by one, longest first, as the failure cost rises, which gives a staircase of trade-offs between cost and risk.
+
+| Parameter | Value | Why |
+|---|---|---|
+| Map | `ridge`, 6 x 30, 12 seeds (3000 to 3011) | enough strips (at least 3) for a staircase |
+| `p_slip` | 0.01 | at the generic 0.15 the safe route always wins and every policy fails with probability 0; from 0.03 upward there are only one to four distinct choices; at 0.01 each map has four to eight, and the optimum of the environment cost fails with probability 1% to 5% |
+| `dash_slip_mult`, costs, `fail_multiplier` | defaults | unchanged |
+
+The calibration was done with the oracle (`value_iteration` over a sweep of failure penalties, counting distinct (cost, failure probability) pairs).
+
 ## Changelog
 
 - v0.1: initial specification (Phase 0).
@@ -168,3 +180,4 @@ Default shield assumption: `p_max = 0.4`, the upper end of the supported `p_slip
 - v0.1.2: documented solver details, trapped cells, early-stopped evaluation and scale limits (Phase 2).
 - v0.1.3: absorbing outcomes described as implicit; dilemma generator rejects maps whose safe route is under 1.4x the corridor (verification pass).
 - v0.1.4: documented input validation; every malformed map input raises `MapError` (testing review).
+- v0.1.5: added the `ridge` template and the risk-experiment configuration (Phase 3).

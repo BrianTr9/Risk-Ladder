@@ -2,6 +2,11 @@
 
 - `dilemma`: a short corridor beside a hazard strip versus a long, hazard-free detour. The choice
   between them is the cost-versus-risk trade-off that the headline experiments study.
+- `ridge`: a corridor along a lava ridge. Hazard strips of different lengths lie beside the corridor
+  and each has its own small alcove that avoids it at a fixed price (up and back down). Avoiding a
+  long strip saves more risk for the same price, so as the price of failure rises the strips are
+  avoided one by one, from the longest to the shortest. This gives many cost/risk trade-offs
+  instead of the single choice of `dilemma`.
 - `field`: open terrain with clustered hazards, rocks and rough ground, for generalisation tests.
 
 Generation is deterministic in `seed`. An invalid draw is retried with the next internal draw.
@@ -20,6 +25,7 @@ from riskladder.env.spec import Costs, MapSpec, Noise
 Grid = list[list[str]]
 MAX_ATTEMPTS = 200
 MIN_DETOUR_RATIO = 1.4  # the safe route must be at least this much longer than the corridor
+MIN_STRIPS = 3  # a ridge map needs at least this many hazard strips to have a staircase of choices
 
 
 def generate(
@@ -44,6 +50,8 @@ def generate(
             continue
         if template == "dilemma" and not is_dilemma(layout):
             continue  # no safe detour, or one too short for the corridor to be a real choice
+        if template == "ridge" and count_strips(layout) < MIN_STRIPS:
+            continue
         return MapSpec(
             layout=layout,
             noise=noise or Noise(),
@@ -90,6 +98,38 @@ def _dilemma(rows: int, cols: int, rng: np.random.Generator, detour: float = 0.8
     _scatter(g, rng, 1, top, ROCK, fraction=0.06)
     g[rc][1] = START
     g[rc][cols - 2] = GOAL
+    return g
+
+
+def _ridge(rows: int, cols: int, rng: np.random.Generator, max_strip: int = 8) -> Grid:
+    """Lane along the bottom, hazard strips below it, and an alcove above each strip.
+
+    The lane (row `rows - 3`) runs from S to G. Hazard strips of random length 1..`max_strip` sit in
+    the row below it; the lane cells beside a strip risk a slip into the hazard. Above each strip is
+    an alcove one cell wider on each side and up to `rows - 4` cells tall; walking through it avoids
+    the strip for a price of twice its height. Rock separates neighbouring alcoves, so the rover
+    must come back down to the lane between strips, and each strip is a separate decision.
+    """
+    if rows < 5 or cols < 20:
+        raise ValueError("ridge maps need at least 5 rows and 20 columns")
+    g = [[ROCK] * cols for _ in range(rows)]
+    lane, hazard_row = rows - 3, rows - 2
+    for c in range(1, cols - 1):
+        g[lane][c] = GROUND
+    start = 3  # leave room at the left for S and a margin before the first alcove
+    while True:
+        length = int(rng.integers(1, max_strip + 1))
+        if start + length > cols - 4:  # the alcove must end before the goal's margin
+            break
+        height = int(rng.integers(1, rows - 3))
+        for c in range(start, start + length):
+            g[hazard_row][c] = HAZARD
+        for r in range(lane - height, lane):
+            for c in range(start - 1, start + length + 1):
+                g[r][c] = GROUND
+        start += length + int(rng.integers(3, 6))  # 3+ cells keep one rock column between alcoves
+    g[lane][1] = START
+    g[lane][cols - 2] = GOAL
     return g
 
 
@@ -153,4 +193,10 @@ def has_safe_route(layout: Layout) -> bool:
     return bool(np.isfinite(steps_to_goal(layout, avoid_hazard_adjacent=True)[r, c]))
 
 
-TEMPLATES: dict[str, Callable[..., Grid]] = {"dilemma": _dilemma, "field": _field}
+def count_strips(layout: Layout) -> int:
+    """Number of separate runs of hazard cells in the hazard row of a `ridge` map."""
+    row = layout.grid[layout.rows - 2]
+    return sum(1 for c, ch in enumerate(row) if ch == HAZARD and (c == 0 or row[c - 1] != HAZARD))
+
+
+TEMPLATES: dict[str, Callable[..., Grid]] = {"dilemma": _dilemma, "ridge": _ridge, "field": _field}
