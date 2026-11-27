@@ -99,6 +99,13 @@ Planners solve a stochastic shortest path problem with **no discounting (γ = 1)
 - Value iteration stops when the maximum Bellman residual is below `1e-9`.
 - Policy iteration starts from a proper policy and keeps every iterate proper.
 
+### 6.2.1 Solver notes
+
+- **Value iteration** is Jacobi (all states updated from the previous sweep) and starts at `V = 0`, so iterates increase monotonically towards `V*`. The Bellman residual is not an error bound for an undiscounted problem, so tests compare against policy iteration.
+- **Policy iteration** evaluates each policy exactly with one sparse LU factorisation (SciPy `splu`, COLAMD ordering). It starts from a proper policy built from fewest-step layers (each state takes the action most likely to move one layer closer to termination), and an improvement only replaces the current action when it is better by more than `1e-10` (relative), so it cannot cycle.
+- **Trapped cells.** A pocket of ground sealed off from every goal and hazard cannot terminate under any policy, so its value is infinite. It is detected once by a reverse graph search and excluded from both solvers. A live state can never move into a trapped one.
+- **Scale.** Value iteration and policy evaluation run to about 10^6 states. Policy iteration with a direct solve is limited to about 10^5 states by memory (see `results/bench.md`).
+
 ### 6.3 Horizon
 
 Every episode is truncated after `H` steps (`truncated = True`, no extra cost). Default `H = 10 · (rows + cols)`, for example 600 on a 30 × 30 map. `H` must be large enough that the optimal policy's timeout probability is below `1e-6` on every experiment map; a test enforces this.
@@ -111,6 +118,8 @@ The oracle evaluates any policy by an exact backward recursion over `H` steps on
 - `P(success)`, `P(fail)`, `P(timeout)`, which sum to 1.
 
 This never becomes singular, so it also works for poor learned policies that loop. **Regret** is `E_H[cost | π] − E_H[cost | π*]` at the start state.
+
+The series is `X = sum_{k<H} P^k b` for the policy's transition matrix `P` and one-step vector `b = [cost, P(success), P(fail)]`. Each term is bounded by the previous one in max-norm, so the evaluation can stop early with a guaranteed absolute error below `tol` (default `1e-12`); a policy that never terminates keeps large terms and runs all `H` steps. When only the value at the start is needed, the series runs on the states reachable from the start, which is much faster on large maps.
 
 A mixture policy (pick `π_i` with weight `w_i` once at the start of an episode) is evaluated as the weighted sum of the components' results, which is exact because every quantity above is linear in the mixture weights.
 
@@ -154,3 +163,4 @@ Default shield assumption: `p_max = 0.4`, the upper end of the supported `p_slip
 
 - v0.1: initial specification (Phase 0).
 - v0.1.1: clarified that the learner boundary is an interface contract, not a hard guarantee (Phase 1).
+- v0.1.2: documented solver details, trapped cells, early-stopped evaluation and scale limits (Phase 2).

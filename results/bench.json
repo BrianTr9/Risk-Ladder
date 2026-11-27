@@ -1,0 +1,88 @@
+{
+  "machine": {
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "machine": "arm64",
+    "python": "3.12.16",
+    "numpy": "2.5.5",
+    "scipy": "1.18.1"
+  },
+  "pi_max_states": 150000,
+  "rows": [
+    {
+      "grid": 12,
+      "states": 97,
+      "build_s": 0.0017034998163580894,
+      "vi_s": 0.0009114593267440796,
+      "vi_iterations": 69,
+      "vi_ms_per_iteration": 0.013209555460059124,
+      "evaluate_from_start_s": 0.0004905005916953087,
+      "evaluate_steps": 94,
+      "optimal_p_timeout": 5.16385543158471e-16,
+      "evaluate_all_states_s": 0.0003387080505490303,
+      "pi_s": 0.002134791575372219,
+      "pi_iterations": 7,
+      "pi_max_value_gap": 1.4211245513706672e-09,
+      "peak_rss_mb": 67.42016
+    },
+    {
+      "grid": 34,
+      "states": 983,
+      "build_s": 0.003779750317335129,
+      "vi_s": 0.003864084370434284,
+      "vi_iterations": 120,
+      "vi_ms_per_iteration": 0.032200703086952366,
+      "evaluate_from_start_s": 0.001578708179295063,
+      "evaluate_steps": 152,
+      "optimal_p_timeout": 1.053193990352419e-15,
+      "evaluate_all_states_s": 0.0014156252145767212,
+      "pi_s": 0.016424458473920822,
+      "pi_iterations": 12,
+      "pi_max_value_gap": 2.0029489178341464e-09,
+      "peak_rss_mb": 69.402624
+    },
+    {
+      "grid": 102,
+      "states": 9603,
+      "build_s": 0.02772783301770687,
+      "vi_s": 0.07665783353149891,
+      "vi_iterations": 318,
+      "vi_ms_per_iteration": 0.24106236959590852,
+      "evaluate_from_start_s": 0.01745604071766138,
+      "evaluate_steps": 298,
+      "optimal_p_timeout": 6.274914120386782e-15,
+      "evaluate_all_states_s": 0.020992041565477848,
+      "pi_s": 0.4944895002990961,
+      "pi_iterations": 23,
+      "pi_max_value_gap": 5.365706101656542e-09,
+      "peak_rss_mb": 133.758976
+    },
+    {
+      "grid": 320,
+      "states": 97119,
+      "build_s": 0.3053932497277856,
+      "vi_s": 1.7086549997329712,
+      "vi_iterations": 724,
+      "vi_ms_per_iteration": 2.36002071786322,
+      "evaluate_from_start_s": 0.47485075052827597,
+      "evaluate_steps": 891,
+      "optimal_p_timeout": 1.1155715294672991e-14,
+      "evaluate_all_states_s": 0.4797319993376732,
+      "pi_s": 26.270461624488235,
+      "pi_iterations": 53,
+      "pi_max_value_gap": 1.1673023436742369e-08,
+      "peak_rss_mb": 2488.041472
+    },
+    {
+      "grid": 1002,
+      "states": 960399,
+      "build_s": 3.1676053339615464,
+      "vi_s": 63.801498667337,
+      "vi_iterations": 2449,
+      "vi_ms_per_iteration": 26.05206152198326,
+      "evaluate_from_start_s": 10.65714762546122,
+      "evaluate_steps": 1916,
+      "optimal_p_timeout": 3.799197555946071e-14,
+      "peak_rss_mb": 2525.34784
+    }
+  ]
+}
