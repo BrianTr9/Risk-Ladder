@@ -139,63 +139,63 @@ def _dots(ax, x, y, colour, label):
 def plot_frontier(data: dict, name: str, path: Path) -> None:
     import matplotlib.pyplot as plt
 
-    style.apply_style()
-    fig, ax = plt.subplots(figsize=(6.6, 4.0))
-    curve = data["cmdp"]
-    ax.plot(
-        [100 * p["p_fail"] for p in curve], [p["cost"] for p in curve],
-        color=style.BLUE, linewidth=2, label="Constrained solver (mixes two policies)",
-    )  # fmt: skip
-    _dots(
-        ax, [100 * v["p_fail"] for v in data["penalty"]], [v["cost"] for v in data["penalty"]],
-        style.ORANGE, "Penalty planner (one policy per price)",
-    )  # fmt: skip
-    top = data["unconstrained"]
-    ax.annotate(
-        "failure priced as in\nthe environment",
-        xy=(100 * top["p_fail"], top["cost"]), xytext=(-10, 16), textcoords="offset points",
-        ha="right", fontsize=8.5, color=style.INK_2,
-        arrowprops={"arrowstyle": "-", "color": style.MUTED, "lw": 0.8},
-    )  # fmt: skip
-    ax.set_xlabel("Probability of losing the rover (%)")
-    ax.set_ylabel("Expected cost, including failures")
-    ax.set_title(f"Cost against risk on {name}")
-    ax.set_xlim(left=-0.1)
-    ax.legend(loc="upper right")
-    fig.tight_layout()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path)
-    plt.close(fig)
+    with style.context():
+        fig, ax = plt.subplots(figsize=(6.6, 4.0))
+        curve = data["cmdp"]
+        ax.plot(
+            [100 * p["p_fail"] for p in curve], [p["cost"] for p in curve],
+            color=style.BLUE, linewidth=2, label="Constrained solver (mixes two policies)",
+        )  # fmt: skip
+        _dots(
+            ax, [100 * v["p_fail"] for v in data["penalty"]], [v["cost"] for v in data["penalty"]],
+            style.ORANGE, "Penalty planner (one policy per price)",
+        )  # fmt: skip
+        top = data["unconstrained"]
+        ax.annotate(
+            "failure priced as in\nthe environment",
+            xy=(100 * top["p_fail"], top["cost"]), xytext=(-10, 16), textcoords="offset points",
+            ha="right", fontsize=8.5, color=style.INK_2,
+            arrowprops={"arrowstyle": "-", "color": style.MUTED, "lw": 0.8},
+        )  # fmt: skip
+        ax.set_xlabel("Probability of losing the rover (%)")
+        ax.set_ylabel("Expected cost, including failures")
+        ax.set_title(f"Cost against risk on {name}")
+        ax.set_xlim(left=-0.1)
+        ax.legend(loc="upper right")
+        fig.tight_layout()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(path)
+        plt.close(fig)
 
 
 def plot_spread(data: dict, path: Path) -> None:
     import matplotlib.pyplot as plt
 
-    style.apply_style()
-    fig, axes = plt.subplots(1, len(SLIP_LEVELS), figsize=(9.6, 4.0), sharey=True)
-    bound = 100 * data["bound"]
-    for ax, p_slip in zip(axes, SLIP_LEVELS, strict=True):
-        rows = [r for r in data["rows"] if r["p_slip"] == p_slip]
-        x = np.array([r["map"] for r in rows], dtype=float)
-        ax.axhline(bound, color=style.MUTED, linewidth=1, linestyle=(0, (4, 3)))
-        # the two series sit side by side so that equal values do not hide each other
-        _dots(ax, x - 0.14, [100 * r["penalty"]["p_fail"] for r in rows], style.ORANGE,
-              "Same penalty on every map")  # fmt: skip
-        _dots(ax, x + 0.14, [100 * r["cmdp"]["p_fail"] for r in rows], style.BLUE,
-              "Constrained solver, bound 1%")  # fmt: skip
-        ax.set_title(f"Slip probability {p_slip}")
-        ax.set_xlabel("Map")
-        ax.set_xticks(x)
-        ax.set_xticklabels([str(int(i)) for i in x], fontsize=7.5)
-        ax.text(x[-1] + 0.4, bound + 0.1, "1% bound", ha="right", va="bottom",
-                fontsize=8, color=style.INK_2)  # fmt: skip
-    axes[0].set_ylabel("Probability of losing the rover (%)")
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, loc="lower center", ncol=2)
-    fig.tight_layout(rect=(0, 0.07, 1, 1))
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path)
-    plt.close(fig)
+    with style.context():
+        fig, axes = plt.subplots(1, len(SLIP_LEVELS), figsize=(9.6, 4.0), sharey=True)
+        bound = 100 * data["bound"]
+        for ax, p_slip in zip(axes, SLIP_LEVELS, strict=True):
+            rows = [r for r in data["rows"] if r["p_slip"] == p_slip]
+            x = np.array([r["map"] for r in rows], dtype=float)
+            ax.axhline(bound, color=style.MUTED, linewidth=1, linestyle=(0, (4, 3)))
+            # the two series sit side by side so that equal values do not hide each other
+            _dots(ax, x - 0.14, [100 * r["penalty"]["p_fail"] for r in rows], style.ORANGE,
+                  "Same penalty on every map")  # fmt: skip
+            _dots(ax, x + 0.14, [100 * r["cmdp"]["p_fail"] for r in rows], style.BLUE,
+                  "Constrained solver, bound 1%")  # fmt: skip
+            ax.set_title(f"Slip probability {p_slip}")
+            ax.set_xlabel("Map")
+            ax.set_xticks(x)
+            ax.set_xticklabels([str(int(i)) for i in x], fontsize=7.5)
+            ax.text(x[-1] + 0.4, bound + 0.1, "1% bound", ha="right", va="bottom",
+                    fontsize=8, color=style.INK_2)  # fmt: skip
+        axes[0].set_ylabel("Probability of losing the rover (%)")
+        handles, labels = axes[0].get_legend_handles_labels()
+        fig.legend(handles, labels, loc="lower center", ncol=2)
+        fig.tight_layout(rect=(0, 0.07, 1, 1))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(path)
+        plt.close(fig)
 
 
 def to_markdown(result: dict) -> str:

@@ -18,35 +18,39 @@ GRID, AXIS = "#e1e0d9", "#c3c2b7"
 SEQUENTIAL = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
 
 
-def apply_style() -> None:
-    plt.rcParams.update(
-        {
-            "figure.facecolor": SURFACE,
-            "axes.facecolor": SURFACE,
-            "savefig.facecolor": SURFACE,
-            "axes.edgecolor": AXIS,
-            "axes.labelcolor": INK_2,
-            "axes.titlecolor": INK,
-            "axes.titlesize": 11,
-            "axes.titleweight": "regular",
-            "axes.titlelocation": "left",
-            "axes.labelsize": 9,
-            "xtick.color": MUTED,
-            "ytick.color": MUTED,
-            "xtick.labelsize": 8.5,
-            "ytick.labelsize": 8.5,
-            "text.color": INK,
-            "font.family": "sans-serif",
-            "axes.spines.top": False,
-            "axes.spines.right": False,
-            "axes.grid": True,
-            "grid.color": GRID,
-            "grid.linewidth": 0.6,
-            "axes.axisbelow": True,
-            "legend.frameon": False,
-            "legend.fontsize": 8.5,
-            "legend.labelcolor": INK_2,
-            "figure.dpi": 100,
-            "savefig.dpi": 160,
-        }
-    )
+def rc() -> dict:
+    """Matplotlib settings for the experiment figures."""
+    return {
+        "figure.facecolor": SURFACE,
+        "axes.facecolor": SURFACE,
+        "savefig.facecolor": SURFACE,
+        "axes.edgecolor": AXIS,
+        "axes.labelcolor": INK_2,
+        "axes.titlecolor": INK,
+        "axes.titlesize": 11,
+        "axes.titleweight": "regular",
+        "axes.titlelocation": "left",
+        "axes.labelsize": 9,
+        "xtick.color": MUTED,
+        "ytick.color": MUTED,
+        "xtick.labelsize": 8.5,
+        "ytick.labelsize": 8.5,
+        "text.color": INK,
+        "font.family": "sans-serif",
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "axes.grid": True,
+        "grid.color": GRID,
+        "grid.linewidth": 0.6,
+        "axes.axisbelow": True,
+        "legend.frameon": False,
+        "legend.fontsize": 8.5,
+        "legend.labelcolor": INK_2,
+        "figure.dpi": 100,
+        "savefig.dpi": 160,
+    }
+
+
+def context():
+    """Apply the style only inside a `with` block, so no other plot (or test) is affected."""
+    return plt.rc_context(rc())

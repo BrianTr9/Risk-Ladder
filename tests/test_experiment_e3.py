@@ -48,3 +48,17 @@ def test_main_writes_the_tables_and_figures_where_asked(tmp_path):
     e3.main(["--quick", "--out", str(tmp_path)])
     for name in ("e3.json", "e3.md", "figures/e3_frontier.png", "figures/e3_risk_spread.png"):
         assert (tmp_path / name).stat().st_size > 0
+
+
+def test_figure_styling_does_not_leak_into_other_plots(tmp_path):
+    """Regression: the style used to change matplotlib's global settings, so a plot drawn later in
+    the same test run came out different (and a test on its title failed depending on the order)."""
+    import matplotlib.pyplot as plt
+
+    before = dict(plt.rcParams)
+    e3.main(["--quick", "--out", str(tmp_path)])
+    assert dict(plt.rcParams) == before
+    _, ax = plt.subplots()
+    ax.set_title("later plot")
+    assert ax.get_title() == "later plot"  # default (centred) placement, not the figure style's
+    plt.close("all")
