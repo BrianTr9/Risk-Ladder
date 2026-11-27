@@ -52,7 +52,10 @@ select = ["E", "F", "W", "I", "UP", "B", "SIM", "NPY", "RUF"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-addopts = "-q"
+# Local runs skip the `slow` experiment tests so the loop stays fast. CI and the nightly job run
+# everything with `-m "slow or not slow"`.
+addopts = "-q -m 'not slow'"
+markers = ["slow: experiment and benchmark tests (several seconds each); run in CI and nightly"]
 
 [tool.coverage.run]
 branch = true

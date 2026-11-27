@@ -1,4 +1,7 @@
+import pytest
 from bench import latency
+
+pytestmark = pytest.mark.slow  # experiments: run in CI and nightly, skipped by default
 
 
 def test_smallest_size_runs_and_solvers_agree():

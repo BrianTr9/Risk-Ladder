@@ -43,11 +43,14 @@ Gaps in the tests, found and closed:
 ## Running it
 
 ```bash
-uv run pytest                                   # fast suite
-uv run pytest --cov                             # with the branch coverage gate used in CI
-uv run pytest --hypothesis-profile=thorough     # 200 examples per property
-uv run python tools/mutation_check.py --jobs 4  # do the tests catch deliberate bugs?
+uv run pytest                                   # fast loop: skips the `slow` experiment tests
+uv run pytest -m "slow or not slow" --cov       # everything, with the branch coverage gate (CI)
+uv run pytest --hypothesis-profile=thorough -m "slow or not slow"   # 200 examples per property
+uv run python tools/mutation_check.py --dry-run # do the mutations still apply? (seconds)
+uv run python tools/mutation_check.py --jobs 4  # do the tests catch deliberate bugs? (many minutes)
 ```
+
+The mutation check runs the suite once per mutant, so it belongs at the end of a phase or in the nightly job, not in the edit loop.
 
 ## Limits
 

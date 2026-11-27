@@ -3,6 +3,8 @@ import itertools
 import pytest
 from experiments import e2
 
+pytestmark = pytest.mark.slow  # experiments: run in CI and nightly, skipped by default
+
 
 @pytest.fixture(scope="module")
 def quick():
@@ -30,8 +32,8 @@ def test_only_an_optimistic_belief_breaks_the_bound(quick):
         if believed > true:
             assert c["mean_violation"] == pytest.approx(0.0, abs=1e-9)
             assert c["mean_extra_cost"] >= -1e-9
-        if believed < true:
-            assert c["mean_extra_cost"] is not None  # the cost can be negative: risk is bought
+        if believed <= true / 2:  # a belief at least twice too low must break the bound somewhere
+            assert c["mean_violation"] > 1e-4
 
 
 def test_the_violation_grows_with_the_size_of_the_mistake(quick):

@@ -3,6 +3,8 @@ import itertools
 import pytest
 from experiments import e3
 
+pytestmark = pytest.mark.slow  # experiments: run in CI and nightly, skipped by default
+
 
 @pytest.fixture(scope="module")
 def quick():

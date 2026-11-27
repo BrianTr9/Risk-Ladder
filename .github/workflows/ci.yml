@@ -17,4 +17,4 @@ jobs:
           uv run ruff check .
           uv run ruff format --check .
       - name: Test (branch coverage gate)
-        run: uv run pytest --cov
+        run: uv run pytest --cov -m "slow or not slow"

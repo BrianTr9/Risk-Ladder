@@ -3,6 +3,8 @@ from experiments import e0
 
 from riskladder.env import load_map
 
+pytestmark = pytest.mark.slow  # experiments: run in CI and nightly, skipped by default
+
 
 def test_required_rollouts_matches_the_normal_approximation():
     # n = z^2 (1 - p) / (p * 0.1^2): about 3.5k, 38k and 384k rollouts for 10%, 1%, 0.1%

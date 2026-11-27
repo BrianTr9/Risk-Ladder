@@ -1,6 +1,9 @@
 """Mutation check: do the tests notice deliberate bugs?
 
-    uv run python tools/mutation_check.py [--jobs 2] [--only 3 7]
+    uv run python tools/mutation_check.py [--jobs 2] [--only 3 7] [--dry-run]
+
+A full run takes a long time (every mutant runs the suite), so it belongs at the end of a phase or
+in the nightly job, not in the edit loop. `--dry-run` only checks that every mutation still applies.
 
 Each mutant is one small, plausible bug applied to a copy of the repository (a changed operator, a
 dropped cost, an off-by-one). The test suite then runs on the copy: a failing test KILLS the mutant,
@@ -159,6 +162,41 @@ MUTANTS = [
         "sampler uses the other side of equal cumulative values",
         True,
     ),
+    # --- planners and the constrained solver
+    Mutant(
+        "agents/planners.py",
+        "return min(spec.costs.move, spec.costs.dash / 2.0)",
+        "return max(spec.costs.move, spec.costs.dash / 2.0)",
+        "heuristic no longer a lower bound",
+    ),
+    Mutant(
+        "agents/planners.py", "if cell == GOAL_NODE:", "if False:", "A* never ends at the goal node"
+    ),
+    Mutant(
+        "agents/planners.py",
+        "self.base.cost + self.extra * self.base.p_fail",
+        "self.base.cost + self.extra",
+        "penalty charged on every step, not only on failure",
+    ),
+    Mutant(
+        "agents/cmdp.py",
+        "weight_lo = min(1.0, max(0.0, (delta - hi_fail) / (lo_fail - hi_fail)))",
+        "weight_lo = 0.5",
+        "mixture weight does not hit the bound exactly",
+    ),
+    Mutant("agents/cmdp.py", "lam_hi *= 4.0", "lam_hi *= 1.0", "multiplier search never grows"),
+    Mutant(
+        "agents/cmdp.py",
+        "hi_value - lam_hi * delta, True",
+        "hi_value, True",
+        "dual bound forgets the bound term",
+    ),
+    Mutant(
+        "agents/cmdp.py",
+        "def meets(fail: float) -> bool:\n        return fail <= delta + FEASIBILITY_SLACK",
+        "def meets(fail: float) -> bool:\n        return fail <= delta + 0.01",
+        "feasibility slack far too loose",
+    ),
     # --- oracle
     Mutant(
         "oracle/evaluate.py", "if horizon < 1:", "if horizon < 0:", "horizon 0 accepted by evaluate"
@@ -256,8 +294,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--jobs", type=int, default=2)
     parser.add_argument("--only", type=int, nargs="*", help="run only these mutant numbers")
+    parser.add_argument("--dry-run", action="store_true", help="only check the mutations apply")
     args = parser.parse_args()
     chosen = [(i, m) for i, m in enumerate(MUTANTS) if not args.only or i in args.only]
+    if args.dry_run:
+        stale = [
+            i for i, m in chosen
+            if (ROOT / SRC / m.file).read_text().count(m.old) != 1
+        ]  # fmt: skip
+        print(f"{len(chosen) - len(stale)}/{len(chosen)} mutations apply; stale: {stale or 'none'}")
+        return 1 if stale else 0
     with ThreadPoolExecutor(args.jobs) as pool:
         results = sorted(pool.map(lambda im: run_one(*im), chosen))
 

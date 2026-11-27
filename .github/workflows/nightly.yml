@@ -17,6 +17,6 @@ jobs:
       - name: Install
         run: uv sync --locked
       - name: Property tests with 200 examples each
-        run: uv run pytest --hypothesis-profile=thorough -p no:cacheprovider
+        run: uv run pytest --hypothesis-profile=thorough -m "slow or not slow" -p no:cacheprovider
       - name: Mutation check
         run: uv run python tools/mutation_check.py --jobs 2
