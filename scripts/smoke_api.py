@@ -1,4 +1,4 @@
-"""Smoke test a running RiskLadder API: health, a golden plan, a round trip and latency.
+"""Smoke test a running Risk-Bounded Autonomy API: health, a golden plan, a round trip and latency.
 
     python scripts/smoke_api.py --url http://localhost:7860 [--commit SHA] [--budget 2.0]
 

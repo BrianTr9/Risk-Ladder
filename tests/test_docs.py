@@ -19,16 +19,35 @@ def anchors(text: str) -> set[str]:
     return out
 
 
-def test_every_local_link_and_image_in_the_readme_exists():
-    for target in re.findall(r"\]\(([^)#]+)(?:#[^)]*)?\)", README):
+DOCUMENTS = [ROOT / "README.md", ROOT / "docs" / "results.md"]
+
+
+def links(path: Path) -> list[tuple[str, str]]:
+    """(target path, anchor) of every markdown link or image that is not a web address."""
+    out = []
+    for target, anchor in re.findall(r"\]\(([^)#]*)(?:#([^)]*))?\)", path.read_text()):
         if not target.startswith(("http", "mailto")):
-            assert (ROOT / target).exists(), target
+            out.append((target, anchor))
+    return out
 
 
-def test_every_anchor_link_in_the_readme_points_at_a_heading():
-    known = anchors(README)
-    for anchor in re.findall(r"\]\(#([^)]+)\)", README):
-        assert anchor in known, anchor
+def test_every_local_link_and_image_in_the_documents_exists():
+    for document in DOCUMENTS:
+        for target, _ in links(document):
+            if target:
+                assert (document.parent / target).exists(), (document.name, target)
+
+
+def test_every_anchor_link_points_at_a_heading_of_the_file_it_names():
+    for document in DOCUMENTS:
+        for target, anchor in links(document):
+            if anchor:
+                destination = document.parent / target if target else document
+                assert anchor in anchors(destination.read_text()), (document.name, target, anchor)
+
+
+def test_the_readme_stays_short_enough_to_read():
+    assert len(README.split()) < 1800  # the detail lives in docs/results.md
 
 
 def test_the_headline_numbers_in_the_claims_come_from_the_results():

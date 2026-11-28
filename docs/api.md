@@ -1,4 +1,4 @@
-# RiskLadder API
+# Risk-Bounded Autonomy API
 
 A thin FastAPI layer over `riskladder.service`. Interactive documentation is served at `/docs`.
 

@@ -1,5 +1,5 @@
 ---
-title: Risk Ladder
+title: Risk-Bounded Autonomy
 colorFrom: blue
 colorTo: gray
 sdk: gradio
@@ -11,7 +11,7 @@ license: mit
 short_description: Exact risk-bounded mission planning demo and API
 ---
 
-# RiskLadder
+# Risk-Bounded Autonomy
 
 Plan a mission for a rover on a hazard map and measure its risk exactly. The demo plans with the
 probability of losing the rover bounded by `delta` (a constrained MDP, solved exactly with an
@@ -22,4 +22,4 @@ api_name="/plan")`. The free Space sleeps when idle, so the first request after 
 take a minute while it wakes up. It runs on ZeroGPU hardware only because that is the free option;
 nothing here uses a GPU.
 
-Source and write-up: https://github.com/BrianTr9/Risk-Ladder
+Source and write-up: https://github.com/BrianTr9/Risk-Bounded-Autonomy

@@ -1,6 +1,6 @@
 # What it costs a rover to learn, and what buys the cost back
 
-A rover crosses a hazard map. It knows the map but not exactly how it moves: each step it may slip sideways with some probability, and entering a hazard ends the mission. The question behind RiskLadder is how much it costs such an agent to lack knowledge of its own dynamics, and which kinds of prior knowledge recover that cost. The maps are small enough to solve exactly, so every regret and every failure probability in this write-up is computed in closed form. Apart from tail risk, none of it is estimated from simulated episodes. All numbers come from `results/` and are summarised in `results/SUMMARY.md`.
+A rover crosses a hazard map. It knows the map but not exactly how it moves: each step it may slip sideways with some probability, and entering a hazard ends the mission. The question behind this project is how much it costs such an agent to lack knowledge of its own dynamics, and which kinds of prior knowledge recover that cost. The maps are small enough to solve exactly, so every regret and every failure probability in this write-up is computed in closed form. Apart from tail risk, none of it is estimated from simulated episodes. All numbers come from `results/` and are summarised in `results/SUMMARY.md`.
 
 ## Exact evaluation
 

@@ -1,6 +1,6 @@
 # Design decisions
 
-The choices that shaped RiskLadder, each with the alternative I passed over, the reason, and the evidence or the cost. The last section lists the things I got wrong first.
+The choices that shaped this project, each with the alternative I passed over, the reason, and the evidence or the cost. The last section lists the things I got wrong first.
 
 ## The problem and the oracle
 

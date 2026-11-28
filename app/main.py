@@ -100,7 +100,7 @@ def commit_sha(file: Path = COMMIT_FILE) -> str:
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="RiskLadder", version=__version__, description=DESCRIPTION)
+    app = FastAPI(title="Risk-Bounded Autonomy", version=__version__, description=DESCRIPTION)
 
     @app.exception_handler(ServiceError)
     async def service_error(_: Request, error: ServiceError) -> JSONResponse:

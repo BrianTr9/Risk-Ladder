@@ -7,7 +7,7 @@ import gradio as gr
 from app import demo
 
 INTRO = """\
-# RiskLadder
+# Risk-Bounded Autonomy
 
 A rover must cross a hazard map without losing itself. The rover slips sideways with some
 probability; entering a hazard ends the mission. Everything here is computed **exactly**, not
@@ -25,7 +25,7 @@ def _run(function, *args):
 def build() -> gr.Blocks:
     first = next(iter(demo.EXAMPLES))
     first_text, first_slip, _ = demo.example_view(first)
-    with gr.Blocks(title="RiskLadder") as page:
+    with gr.Blocks(title="Risk-Bounded Autonomy") as page:
         gr.Markdown(INTRO)
         text = gr.Textbox(value=first_text, lines=8, label="Map (editable, `.map` text format)")
         with gr.Row():

@@ -1,4 +1,4 @@
-# How RiskLadder is tested
+# How Risk-Bounded Autonomy is tested
 
 The results of this project are only worth something if the code computing them is right, so testing is layered. Each layer answers a different question, and none of them is trusted alone.
 

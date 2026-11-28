@@ -1,4 +1,4 @@
-# RiskLadder environment specification (v0.1)
+# Risk-Bounded Autonomy environment specification (v0.1)
 
 This document fixes the rules of the environment before any code is written. Every module (dynamics, oracle, agents, API) must follow it, and any change to it is a versioned decision recorded in the changelog at the end.
 
