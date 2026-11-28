@@ -2,7 +2,7 @@
 
 **Exact benchmarking of safe planning and learning for autonomous agents under model uncertainty.**
 
-> Status: under construction. The environment rules are fixed in [docs/env_spec.md](docs/env_spec.md); the exact oracle, the planners (A*, penalty, constrained) and the API are done (see Results so far). Learners, safety shielding and the live demo come next.
+> Status: the environment, exact oracle, planners (A*, penalty, constrained), learners (Q-learning, SARSA, linear, two model-based), safety shield, shaping and the API are done and measured; the live demo and the write-up come next. Every number below comes from `results/` (see [results/SUMMARY.md](results/SUMMARY.md), generated).
 
 ## The problem
 
@@ -21,13 +21,38 @@ Each rung removes one piece of knowledge from the agent.
 | 3 | Stochastic dynamics, no model | Q-learning, SARSA, linear Q-learning |
 | 4 | Map known, probabilities unknown | Model-based RL, safety shield, reward shaping from the map |
 
-## Planned claims
+## Claims
 
 1. **Exact oracle:** expected cost and failure probability of any policy, exactly and faster than Monte Carlo at small risk levels.
-2. **A penalty is not a constraint:** one fixed failure penalty gives very different risk across maps and noise levels; a constrained MDP holds `P(fail) ≤ δ` on every map at minimum cost. Model misspecification breaks that guarantee by a measurable amount.
-3. **Prior knowledge buys back the cost of learning:** map-based shielding, shaping and structured models reduce failures during training at little cost in regret, and map features generalise to unseen maps.
+2. **A penalty is not a constraint:** one fixed failure penalty gives very different risk across maps and noise levels; a constrained MDP holds `P(fail) <= delta` on every map at minimum cost. Model misspecification breaks that guarantee by a measurable amount.
+3. **Prior knowledge buys back the cost of learning:** a structured model cuts the rovers lost while learning from about 1,250 (Q-learning) to 17, and to 1 when it plans under a risk bound; a safety shield cuts it about fivefold for a model-free learner; map features carry over to unseen maps. Reward shaping did not help, and that is reported too.
+
+Results are measured on the generated map families in `experiments/maps/` (grid worlds), not on real vehicles.
+
+### Reproduce
+
+```bash
+uv sync
+uv run python -m experiments.run all --smoke   # about a minute: tiny versions, written to results/smoke/
+uv run python -m experiments.run all           # every experiment and results/SUMMARY.md (tens of minutes)
+uv run python -m experiments.run list          # the experiments and what each shows
+```
 
 ## Results so far
+
+### Rung 1: planning as if the rover never slips (E5)
+
+A* finds the cheapest route on the noise-free map. Replanned from wherever the rover ends up and scored exactly under the true slip probability, on the ten `dilemma` maps (the shortest route runs beside a hazard strip):
+
+| True slip | A* loses the rover (mean, range over maps) | Optimal policy | Cost above the optimum (median) |
+|---|---|---|---|
+| 0.05 | 25.1% (15.0 to 31.5) | 0.0% | 64% |
+| 0.15 | 63.8% (44.1 to 74.3) | 0.0% | 152% |
+| 0.30 | 93.6% (81.3 to 98.0) | 0.0% | 153% |
+
+![A* under slip](results/figures/e5_astar.png)
+
+A plan that ignores noise is optimal at slip 0 and fails most of the time at the default slip of 0.15; the rungs above it exist to close that gap. Reproduce with `uv run python -m experiments.e5`.
 
 ### Exact evaluation versus Monte Carlo (E0)
 

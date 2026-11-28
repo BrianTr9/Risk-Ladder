@@ -1,0 +1,782 @@
+{
+  "maps": 10,
+  "dash_slip_mult": 2.0,
+  "curve": [
+    {
+      "p_slip": 0.0,
+      "p_fail": {
+        "mean": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "regret": {
+        "median": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "optimal_p_fail": 0.0
+    },
+    {
+      "p_slip": 0.025,
+      "p_fail": {
+        "mean": 0.13039082069298993,
+        "min": 0.07496754834032938,
+        "max": 0.1662556053412043
+      },
+      "regret": {
+        "median": 0.13325316488855177,
+        "min": 0.05576126384104776,
+        "max": 0.3274063582400931
+      },
+      "optimal_p_fail": 0.027616119591377625
+    },
+    {
+      "p_slip": 0.05,
+      "p_fail": {
+        "mean": 0.25139192973187857,
+        "min": 0.14973028138212577,
+        "max": 0.3150918579382451
+      },
+      "regret": {
+        "median": 0.6391393486312551,
+        "min": 0.23103581233288947,
+        "max": 0.9349557731965417
+      },
+      "optimal_p_fail": 0.0
+    },
+    {
+      "p_slip": 0.075,
+      "p_fail": {
+        "mean": 0.3627854559069713,
+        "min": 0.2240538566323811,
+        "max": 0.4467258867070062
+      },
+      "regret": {
+        "median": 1.002370311499737,
+        "min": 0.48286503533764097,
+        "max": 1.3370159410784372
+      },
+      "optimal_p_fail": 0.0
+    },
+    {
+      "p_slip": 0.1,
+      "p_fail": {
+        "mean": 0.46441434180317726,
+        "min": 0.2976680384087792,
+        "max": 0.5615376139799361
+      },
+      "regret": {
+        "median": 1.2515786655695678,
+        "min": 0.669841189796147,
+        "max": 1.574708228861084
+      },
+      "optimal_p_fail": 0.0
+    },
+    {
+      "p_slip": 0.15,
+      "p_fail": {
+        "mean": 0.6381223779996967,
+        "min": 0.4414817830246284,
+        "max": 0.7431060951937131
+      },
+      "regret": {
+        "median": 1.5172343234928403,
+        "min": 0.9142715166300679,
+        "max": 1.7551230654333745
+      },
+      "optimal_p_fail": 0.0
+    },
+    {
+      "p_slip": 0.2,
+      "p_fail": {
+        "mean": 0.77291259765625,
+        "min": 0.5781249999999999,
+        "max": 0.8665161132812503
+      },
+      "regret": {
+        "median": 1.5991503316480566,
+        "min": 1.1219836868300315,
+        "max": 1.8220987843000034
+      },
+      "optimal_p_fail": 0.0
+    },
+    {
+      "p_slip": 0.3,
+      "p_fail": {
+        "mean": 0.9360188842598383,
+        "min": 0.8134110787172009,
+        "max": 0.9801054711168693
+      },
+      "regret": {
+        "median": 1.5277672337805668,
+        "min": 1.142237008848096,
+        "max": 1.8215173300616792
+      },
+      "optimal_p_fail": 0.0
+    },
+    {
+      "p_slip": 0.4,
+      "p_fail": {
+        "mean": 0.9927754915409237,
+        "min": 0.9629629629629629,
+        "max": 0.9995427526291728
+      },
+      "regret": {
+        "median": 1.3186751992583732,
+        "min": 0.9934133617213046,
+        "max": 1.809624812808692
+      },
+      "optimal_p_fail": 0.0
+    }
+  ],
+  "rows": {
+    "0.0": [
+      {
+        "map": "dilemma-30x30-s0",
+        "p_fail": 0.0,
+        "optimal_p_fail": 0.0,
+        "regret": 0.0,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s1",
+        "p_fail": 0.0,
+        "optimal_p_fail": 0.0,
+        "regret": 0.0,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s2",
+        "p_fail": 0.0,
+        "optimal_p_fail": 0.0,
+        "regret": 0.0,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s3",
+        "p_fail": 0.0,
+        "optimal_p_fail": 0.0,
+        "regret": 0.0,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s4",
+        "p_fail": 0.0,
+        "optimal_p_fail": 0.0,
+        "regret": 0.0,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s5",
+        "p_fail": 0.0,
+        "optimal_p_fail": 0.0,
+        "regret": 0.0,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s6",
+        "p_fail": 0.0,
+        "optimal_p_fail": 0.0,
+        "regret": 0.0,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s7",
+        "p_fail": 0.0,
+        "optimal_p_fail": 0.0,
+        "regret": 0.0,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s8",
+        "p_fail": 0.0,
+        "optimal_p_fail": 0.0,
+        "regret": 0.0,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s9",
+        "p_fail": 0.0,
+        "optimal_p_fail": 0.0,
+        "regret": 0.0,
+        "p_timeout": 0.0
+      }
+    ],
+    "0.025": [
+      {
+        "map": "dilemma-30x30-s0",
+        "p_fail": 0.14431496337649907,
+        "optimal_p_fail": 0.0,
+        "regret": 0.23064376468161255,
+        "p_timeout": 7.771561172376096e-16
+      },
+      {
+        "map": "dilemma-30x30-s1",
+        "p_fail": 0.16625560534120423,
+        "optimal_p_fail": 0.0,
+        "regret": 0.3274063582400931,
+        "p_timeout": 9.71445146547012e-16
+      },
+      {
+        "map": "dilemma-30x30-s2",
+        "p_fail": 0.09868632915211581,
+        "optimal_p_fail": 0.0022224825610339797,
+        "regret": 0.061280180530150594,
+        "p_timeout": 8.049116928532385e-16
+      },
+      {
+        "map": "dilemma-30x30-s3",
+        "p_fail": 0.07496754834032938,
+        "optimal_p_fail": 0.06264199935086012,
+        "regret": 0.06418024281271809,
+        "p_timeout": 9.853229343548264e-16
+      },
+      {
+        "map": "dilemma-30x30-s4",
+        "p_fail": 0.1662556053412043,
+        "optimal_p_fail": 0.0,
+        "regret": 0.2510755461760742,
+        "p_timeout": 9.159339953157541e-16
+      },
+      {
+        "map": "dilemma-30x30-s5",
+        "p_fail": 0.1443149633764991,
+        "optimal_p_fail": 0.0,
+        "regret": 0.14562451992997208,
+        "p_timeout": 7.494005416219807e-16
+      },
+      {
+        "map": "dilemma-30x30-s6",
+        "p_fail": 0.12179693609693329,
+        "optimal_p_fail": 0.002822958024623509,
+        "regret": 0.12088180984713147,
+        "p_timeout": 6.938893903907228e-16
+      },
+      {
+        "map": "dilemma-30x30-s7",
+        "p_fail": 0.14431496337649913,
+        "optimal_p_fail": 0.12179693609693334,
+        "regret": 0.10339101955304784,
+        "p_timeout": 7.216449660063518e-16
+      },
+      {
+        "map": "dilemma-30x30-s8",
+        "p_fail": 0.09868632915211585,
+        "optimal_p_fail": 0.08667681988032526,
+        "regret": 0.05576126384104776,
+        "p_timeout": 7.632783294297951e-16
+      },
+      {
+        "map": "dilemma-30x30-s9",
+        "p_fail": 0.1443149633764992,
+        "optimal_p_fail": 0.0,
+        "regret": 0.3226561337961294,
+        "p_timeout": 6.38378239159465e-16
+      }
+    ],
+    "0.05": [
+      {
+        "map": "dilemma-30x30-s0",
+        "p_fail": 0.2770414056014809,
+        "optimal_p_fail": 0.0,
+        "regret": 0.7558175418857144,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s1",
+        "p_fail": 0.315091857938245,
+        "optimal_p_fail": 0.0,
+        "regret": 0.9349557731965417,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s2",
+        "p_fail": 0.1944813192041191,
+        "optimal_p_fail": 0.0,
+        "regret": 0.4771177427260479,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s3",
+        "p_fail": 0.14973028138212577,
+        "optimal_p_fail": 0.0,
+        "regret": 0.23103581233288947,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s4",
+        "p_fail": 0.3150918579382451,
+        "optimal_p_fail": 0.0,
+        "regret": 0.8332747181399807,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s5",
+        "p_fail": 0.27704140560148105,
+        "optimal_p_fail": 0.0,
+        "regret": 0.6635850988943415,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s6",
+        "p_fail": 0.2368770392460076,
+        "optimal_p_fail": 0.0,
+        "regret": 0.6146935983681688,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s7",
+        "p_fail": 0.27704140560148094,
+        "optimal_p_fail": 0.0,
+        "regret": 0.4975835696536968,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s8",
+        "p_fail": 0.19448131920411907,
+        "optimal_p_fail": 0.0,
+        "regret": 0.3113344392077477,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s9",
+        "p_fail": 0.2770414056014809,
+        "optimal_p_fail": 0.0,
+        "regret": 0.9019983635382571,
+        "p_timeout": 0.0
+      }
+    ],
+    "0.075": [
+      {
+        "map": "dilemma-30x30-s0",
+        "p_fail": 0.39790758259291853,
+        "optimal_p_fail": 0.0,
+        "regret": 1.1065795057237453,
+        "p_timeout": 1.6653345369377348e-16
+      },
+      {
+        "map": "dilemma-30x30-s1",
+        "p_fail": 0.4467258867070062,
+        "optimal_p_fail": 0.0,
+        "regret": 1.3370159410784372,
+        "p_timeout": 3.3306690738754696e-16
+      },
+      {
+        "map": "dilemma-30x30-s2",
+        "p_fail": 0.2869684087973231,
+        "optimal_p_fail": 0.0,
+        "regret": 0.7879156612776825,
+        "p_timeout": 6.661338147750939e-16
+      },
+      {
+        "map": "dilemma-30x30-s3",
+        "p_fail": 0.2240538566323811,
+        "optimal_p_fail": 0.0,
+        "regret": 0.48286503533764097,
+        "p_timeout": 6.661338147750939e-16
+      },
+      {
+        "map": "dilemma-30x30-s4",
+        "p_fail": 0.44672588670700614,
+        "optimal_p_fail": 0.0,
+        "regret": 1.226996963489365,
+        "p_timeout": 3.885780586188048e-16
+      },
+      {
+        "map": "dilemma-30x30-s5",
+        "p_fail": 0.39790758259291864,
+        "optimal_p_fail": 0.0,
+        "regret": 1.0252652272561746,
+        "p_timeout": 5.551115123125783e-17
+      },
+      {
+        "map": "dilemma-30x30-s6",
+        "p_fail": 0.34478178105699964,
+        "optimal_p_fail": 0.0,
+        "regret": 0.9794753957432994,
+        "p_timeout": 3.3306690738754696e-16
+      },
+      {
+        "map": "dilemma-30x30-s7",
+        "p_fail": 0.3979075825929184,
+        "optimal_p_fail": 0.0,
+        "regret": 0.8240484592933994,
+        "p_timeout": 3.885780586188048e-16
+      },
+      {
+        "map": "dilemma-30x30-s8",
+        "p_fail": 0.28696840879732305,
+        "optimal_p_fail": 0.0,
+        "regret": 0.58219369472777,
+        "p_timeout": 7.216449660063518e-16
+      },
+      {
+        "map": "dilemma-30x30-s9",
+        "p_fail": 0.3979075825929187,
+        "optimal_p_fail": 0.0,
+        "regret": 1.297372117385168,
+        "p_timeout": 0.0
+      }
+    ],
+    "0.1": [
+      {
+        "map": "dilemma-30x30-s0",
+        "p_fail": 0.5067298157274281,
+        "optimal_p_fail": 0.0,
+        "regret": 1.3392983589885687,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s1",
+        "p_fail": 0.561537613979936,
+        "optimal_p_fail": 0.0,
+        "regret": 1.574708228861084,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s2",
+        "p_fail": 0.3757049230300262,
+        "optimal_p_fail": 0.0,
+        "regret": 1.0081491648094996,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s3",
+        "p_fail": 0.2976680384087792,
+        "optimal_p_fail": 0.0,
+        "regret": 0.669841189796147,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s4",
+        "p_fail": 0.5615376139799361,
+        "optimal_p_fail": 0.0,
+        "regret": 1.4780339638499946,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s5",
+        "p_fail": 0.5067298157274279,
+        "optimal_p_fail": 0.0,
+        "regret": 1.2590311622157868,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s6",
+        "p_fail": 0.44507104269335673,
+        "optimal_p_fail": 0.0,
+        "regret": 1.2441261689233487,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s7",
+        "p_fail": 0.5067298157274283,
+        "optimal_p_fail": 0.0,
+        "regret": 1.0359488298271384,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s8",
+        "p_fail": 0.3757049230300259,
+        "optimal_p_fail": 0.0,
+        "regret": 0.7688803819261917,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s9",
+        "p_fail": 0.5067298157274283,
+        "optimal_p_fail": 0.0,
+        "regret": 1.5457955561933032,
+        "p_timeout": 0.0
+      }
+    ],
+    "0.15": [
+      {
+        "map": "dilemma-30x30-s0",
+        "p_fail": 0.6880574013066518,
+        "optimal_p_fail": 0.0,
+        "regret": 1.5706710189459512,
+        "p_timeout": 6.661338147750939e-16
+      },
+      {
+        "map": "dilemma-30x30-s1",
+        "p_fail": 0.7431060951937131,
+        "optimal_p_fail": 0.0,
+        "regret": 1.7551230654333745,
+        "p_timeout": 5.551115123125783e-16
+      },
+      {
+        "map": "dilemma-30x30-s2",
+        "p_fail": 0.5400438213143998,
+        "optimal_p_fail": 0.0,
+        "regret": 1.28773811725387,
+        "p_timeout": 7.771561172376096e-16
+      },
+      {
+        "map": "dilemma-30x30-s3",
+        "p_fail": 0.4414817830246284,
+        "optimal_p_fail": 0.0,
+        "regret": 0.9142715166300679,
+        "p_timeout": 8.326672684688674e-16
+      },
+      {
+        "map": "dilemma-30x30-s4",
+        "p_fail": 0.7431060951937131,
+        "optimal_p_fail": 0.0,
+        "regret": 1.7045117612355665,
+        "p_timeout": 5.551115123125783e-16
+      },
+      {
+        "map": "dilemma-30x30-s5",
+        "p_fail": 0.6880574013066526,
+        "optimal_p_fail": 0.0,
+        "regret": 1.4686651977166807,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s6",
+        "p_fail": 0.6212125587295055,
+        "optimal_p_fail": 0.0,
+        "regret": 1.5658034492689998,
+        "p_timeout": 6.661338147750939e-16
+      },
+      {
+        "map": "dilemma-30x30-s7",
+        "p_fail": 0.6880574013066515,
+        "optimal_p_fail": 0.0,
+        "regret": 1.2326173385529742,
+        "p_timeout": 9.992007221626409e-16
+      },
+      {
+        "map": "dilemma-30x30-s8",
+        "p_fail": 0.5400438213144,
+        "optimal_p_fail": 0.0,
+        "regret": 0.9752896402479398,
+        "p_timeout": 5.551115123125783e-16
+      },
+      {
+        "map": "dilemma-30x30-s9",
+        "p_fail": 0.6880574013066517,
+        "optimal_p_fail": 0.0,
+        "regret": 1.7411104096145311,
+        "p_timeout": 7.771561172376096e-16
+      }
+    ],
+    "0.2": [
+      {
+        "map": "dilemma-30x30-s0",
+        "p_fail": 0.822021484375,
+        "optimal_p_fail": 0.0,
+        "regret": 1.659130083075195,
+        "p_timeout": 2.220446049250313e-16
+      },
+      {
+        "map": "dilemma-30x30-s1",
+        "p_fail": 0.8665161132812503,
+        "optimal_p_fail": 0.0,
+        "regret": 1.8106878255744845,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s2",
+        "p_fail": 0.6835937499999998,
+        "optimal_p_fail": 0.0,
+        "regret": 1.49668926181814,
+        "p_timeout": 6.661338147750939e-16
+      },
+      {
+        "map": "dilemma-30x30-s3",
+        "p_fail": 0.5781249999999999,
+        "optimal_p_fail": 0.0,
+        "regret": 1.1219836868300315,
+        "p_timeout": 5.551115123125783e-16
+      },
+      {
+        "map": "dilemma-30x30-s4",
+        "p_fail": 0.8665161132812502,
+        "optimal_p_fail": 0.0,
+        "regret": 1.7934230723619369,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s5",
+        "p_fail": 0.822021484375,
+        "optimal_p_fail": 0.0,
+        "regret": 1.5391705802209183,
+        "p_timeout": 2.220446049250313e-16
+      },
+      {
+        "map": "dilemma-30x30-s6",
+        "p_fail": 0.7626953124999998,
+        "optimal_p_fail": 0.0,
+        "regret": 1.766721071604719,
+        "p_timeout": 3.3306690738754696e-16
+      },
+      {
+        "map": "dilemma-30x30-s7",
+        "p_fail": 0.8220214843749998,
+        "optimal_p_fail": 0.0,
+        "regret": 1.319414346665127,
+        "p_timeout": 4.440892098500626e-16
+      },
+      {
+        "map": "dilemma-30x30-s8",
+        "p_fail": 0.68359375,
+        "optimal_p_fail": 0.0,
+        "regret": 1.1265377907829701,
+        "p_timeout": 4.440892098500626e-16
+      },
+      {
+        "map": "dilemma-30x30-s9",
+        "p_fail": 0.8220214843749997,
+        "optimal_p_fail": 0.0,
+        "regret": 1.8220987843000034,
+        "p_timeout": 5.551115123125783e-16
+      }
+    ],
+    "0.3": [
+      {
+        "map": "dilemma-30x30-s0",
+        "p_fail": 0.9651845744545212,
+        "optimal_p_fail": 0.0,
+        "regret": 1.4636652233085867,
+        "p_timeout": 6.661338147750939e-16
+      },
+      {
+        "map": "dilemma-30x30-s1",
+        "p_fail": 0.9801054711168693,
+        "optimal_p_fail": 0.0,
+        "regret": 1.602110332680878,
+        "p_timeout": 1.1102230246251565e-16
+      },
+      {
+        "map": "dilemma-30x30-s2",
+        "p_fail": 0.8933777592669718,
+        "optimal_p_fail": 0.0,
+        "regret": 1.591869244252547,
+        "p_timeout": 6.661338147750939e-16
+      },
+      {
+        "map": "dilemma-30x30-s3",
+        "p_fail": 0.8134110787172009,
+        "optimal_p_fail": 0.0,
+        "regret": 1.2998496807049702,
+        "p_timeout": 4.440892098500626e-16
+      },
+      {
+        "map": "dilemma-30x30-s4",
+        "p_fail": 0.980105471116869,
+        "optimal_p_fail": 0.0,
+        "regret": 1.633965732169357,
+        "p_timeout": 4.440892098500626e-16
+      },
+      {
+        "map": "dilemma-30x30-s5",
+        "p_fail": 0.965184574454522,
+        "optimal_p_fail": 0.0,
+        "regret": 1.3682571385138473,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s6",
+        "p_fail": 0.939073005295413,
+        "optimal_p_fail": 0.0,
+        "regret": 1.8215173300616792,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s7",
+        "p_fail": 0.9651845744545213,
+        "optimal_p_fail": 0.0,
+        "regret": 1.2018803409441368,
+        "p_timeout": 4.440892098500626e-16
+      },
+      {
+        "map": "dilemma-30x30-s8",
+        "p_fail": 0.8933777592669718,
+        "optimal_p_fail": 0.0,
+        "regret": 1.142237008848096,
+        "p_timeout": 6.661338147750939e-16
+      },
+      {
+        "map": "dilemma-30x30-s9",
+        "p_fail": 0.9651845744545212,
+        "optimal_p_fail": 0.0,
+        "regret": 1.5975439277902024,
+        "p_timeout": 6.661338147750939e-16
+      }
+    ],
+    "0.4": [
+      {
+        "map": "dilemma-30x30-s0",
+        "p_fail": 0.9986282578875173,
+        "optimal_p_fail": 0.0,
+        "regret": 1.1034481629745534,
+        "p_timeout": 4.440892098500626e-16
+      },
+      {
+        "map": "dilemma-30x30-s1",
+        "p_fail": 0.9995427526291728,
+        "optimal_p_fail": 0.0,
+        "regret": 1.3615130507930493,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s2",
+        "p_fail": 0.9876543209876542,
+        "optimal_p_fail": 0.0,
+        "regret": 1.5195935877754747,
+        "p_timeout": 7.771561172376096e-16
+      },
+      {
+        "map": "dilemma-30x30-s3",
+        "p_fail": 0.9629629629629629,
+        "optimal_p_fail": 0.0,
+        "regret": 1.5966953296439264,
+        "p_timeout": 7.771561172376096e-16
+      },
+      {
+        "map": "dilemma-30x30-s4",
+        "p_fail": 0.9995427526291722,
+        "optimal_p_fail": 0.0,
+        "regret": 1.4727319330968953,
+        "p_timeout": 1.1102230246251565e-16
+      },
+      {
+        "map": "dilemma-30x30-s5",
+        "p_fail": 0.9986282578875176,
+        "optimal_p_fail": 0.0,
+        "regret": 1.074360699077,
+        "p_timeout": 0.0
+      },
+      {
+        "map": "dilemma-30x30-s6",
+        "p_fail": 0.9958847736625511,
+        "optimal_p_fail": 0.0,
+        "regret": 1.809624812808692,
+        "p_timeout": 3.3306690738754696e-16
+      },
+      {
+        "map": "dilemma-30x30-s7",
+        "p_fail": 0.9986282578875169,
+        "optimal_p_fail": 0.0,
+        "regret": 0.9934133617213046,
+        "p_timeout": 4.440892098500626e-16
+      },
+      {
+        "map": "dilemma-30x30-s8",
+        "p_fail": 0.9876543209876539,
+        "optimal_p_fail": 0.0,
+        "regret": 1.2758373477236973,
+        "p_timeout": 9.992007221626409e-16
+      },
+      {
+        "map": "dilemma-30x30-s9",
+        "p_fail": 0.9986282578875169,
+        "optimal_p_fail": 0.0,
+        "regret": 1.1570130127996625,
+        "p_timeout": 4.440892098500626e-16
+      }
+    ]
+  }
+}
