@@ -42,13 +42,22 @@ def call(url: str, payload: dict | None = None, timeout: float = 30.0) -> tuple[
     return status, json.loads(body), time.perf_counter() - started
 
 
+def fetch(url: str, timeout: float = 30.0) -> tuple[int, str]:
+    """A plain GET (the demo page is HTML, not JSON)."""
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as response:
+            return response.status, response.read().decode(errors="replace")
+    except urllib.error.HTTPError as error:
+        return error.code, ""
+
+
 def check(condition: bool, message: str, failures: list[str]) -> None:
     print(("ok    " if condition else "FAIL  ") + message)
     if not condition:
         failures.append(message)
 
 
-def run(url: str, commit: str | None, calls: int, budget: float) -> int:
+def run(url: str, commit: str | None, calls: int, budget: float, demo: bool = True) -> int:
     url = url.rstrip("/")
     failures: list[str] = []
     text = MAP_FILE.read_text()
@@ -60,6 +69,12 @@ def run(url: str, commit: str | None, calls: int, budget: float) -> int:
             health.get("commit", "").startswith(commit),
             f"deployed commit is {commit[:7]}",
             failures,
+        )
+
+    if demo:
+        status, page = fetch(f"{url}/demo/")
+        check(
+            status == 200 and "gradio" in page.lower(), "GET /demo serves the demo page", failures
         )
 
     status, plan, _ = call(f"{url}/plan", {"map": text, "delta": GOLDEN_DELTA})
@@ -102,8 +117,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--commit", help="expect /health to report this commit (prefix match)")
     parser.add_argument("--calls", type=int, default=20)
     parser.add_argument("--budget", type=float, default=2.0, help="p95 latency budget in seconds")
+    parser.add_argument("--no-demo", action="store_true", help="skip the /demo page check")
     args = parser.parse_args(argv)
-    return run(args.url, args.commit, args.calls, args.budget)
+    return run(args.url, args.commit, args.calls, args.budget, demo=not args.no_demo)
 
 
 if __name__ == "__main__":

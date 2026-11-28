@@ -1,8 +1,10 @@
 # RiskLadder
 
+[![ci](https://github.com/BrianTr9/Risk-Ladder/actions/workflows/ci.yml/badge.svg)](https://github.com/BrianTr9/Risk-Ladder/actions/workflows/ci.yml)
+
 **Exact benchmarking of safe planning and learning for autonomous agents under model uncertainty.**
 
-> Status: the environment, exact oracle, planners (A*, penalty, constrained), learners (Q-learning, SARSA, linear, two model-based), safety shield, shaping and the API are done and measured; the live demo and the write-up come next. Every number below comes from `results/` (see [results/SUMMARY.md](results/SUMMARY.md), generated).
+> Status: the environment, exact oracle, planners (A*, penalty, constrained), learners (Q-learning, SARSA, linear, two model-based), safety shield, shaping, the API and the interactive demo are done and measured; the write-up comes next. Every number below comes from `results/` (see [results/SUMMARY.md](results/SUMMARY.md), generated).
 
 ## The problem
 
@@ -201,9 +203,9 @@ Rovers lost while learning; final regret as median [quartiles]; runs whose final
 
 Reproduce with `uv run python -m experiments.e1b`.
 
-### The API
+### The API and the demo
 
-`POST /plan` returns the cheapest policy with the failure probability bounded exactly, certified optimal by a dual bound; `POST /evaluate` scores a policy you bring. See [docs/api.md](docs/api.md) for the endpoints, limits, measured latency and deployment.
+`POST /plan` returns the cheapest policy with the failure probability bounded exactly, certified optimal by a dual bound; `POST /evaluate` scores a policy you bring. The same server hosts an interactive demo at `/demo` (plan a mission, see what a wrong slip estimate breaks, browse the results): `uv sync --extra app --extra demo --extra exp && uv run uvicorn app.main:app --port 7860`. See [docs/api.md](docs/api.md) for the endpoints, limits, measured latency, the demo and deployment.
 
 ## Development
 

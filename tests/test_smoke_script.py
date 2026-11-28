@@ -83,3 +83,9 @@ def test_deploy_stages_only_what_the_image_needs(tmp_path):
 )
 def test_space_url(space, url):
     assert deploy_space.space_url(space) == url
+
+
+def test_smoke_script_can_skip_the_demo_page_and_fails_when_it_is_missing(server, capsys):
+    assert smoke_api.main(["--url", server, "--calls", "2", "--no-demo"]) == 0
+    capsys.readouterr()
+    assert smoke_api.run(server + "/nowhere", None, 1, 2.0) == 1  # nothing answers there

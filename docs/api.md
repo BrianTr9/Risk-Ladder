@@ -42,11 +42,21 @@ Planning without a binding risk bound is one value iteration (milliseconds). A b
 
 The limit of 2,500 cells keeps the worst case near 1.5 s. The smoke test (`scripts/smoke_api.py`) checks the **p95** of 20 calls against a budget of 2 s in CI and 3 s on the Space; it reports percentiles rather than a mean because a mean hides a slow tail. A free Space has a slower CPU than the measurements above, so expect a few times these figures there.
 
+## The demo
+
+When Gradio is installed (the `demo` extra, included in the Docker image) the same process serves an interactive demo at `/demo`, and `/` redirects to it; without Gradio `/` redirects to `/docs` and the API is unchanged. The demo is a thin layer over `riskladder.service`, the code the API runs (`app/demo.py` computes, `app/ui.py` lays out):
+
+- **Plan a mission:** pick or generate a map, set the true slip probability, a failure bound and an extra failure price; see the environment optimum next to the constrained plan (arrows are the policy, colour the probability of losing the rover from each cell) and a table of the three solvers.
+- **A wrong estimate:** plan with a believed slip, score the plan under the true one, and see whether the bound holds.
+- **Results:** the headline figures and the generated summary from `results/`.
+
+The image with the demo is about 1 GB uncompressed (Gradio and its dependencies add about 400 MB), so a cold start on a free Space is slower than for the API alone.
+
 ## Running it
 
 ```bash
-uv sync --extra app
-uv run uvicorn app.main:app --port 7860          # local
+uv sync --extra app --extra demo --extra exp
+uv run uvicorn app.main:app --port 7860          # local; the demo is at /demo
 docker build -t riskladder-api . && docker run -p 7860:7860 riskladder-api
 uv run python scripts/smoke_api.py --url http://localhost:7860
 ```

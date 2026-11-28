@@ -1790,6 +1790,7 @@ exp = [
 dev = [
     { name = "allpairspy" },
     { name = "fastapi" },
+    { name = "gradio" },
     { name = "httpx" },
     { name = "hypothesis" },
     { name = "matplotlib" },
@@ -1818,6 +1819,7 @@ provides-extras = ["app", "demo", "exp"]
 dev = [
     { name = "allpairspy", specifier = ">=2.5.1" },
     { name = "fastapi", specifier = ">=0.115" },
+    { name = "gradio", specifier = ">=5.0" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "hypothesis", specifier = ">=6.100" },
     { name = "matplotlib", specifier = ">=3.11.2" },

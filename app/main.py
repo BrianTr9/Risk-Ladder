@@ -10,7 +10,7 @@ import os
 from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field
 
 from riskladder import __version__, service
@@ -140,7 +140,25 @@ def create_app() -> FastAPI:
         )
         return EvaluateResponse(outcome=Outcome(**vars(outcome)), seconds=seconds)
 
+    _mount_demo(app)
     return app
+
+
+def _mount_demo(app: FastAPI) -> None:
+    """Serve the Gradio demo at /demo when it is installed; the API works without it."""
+    try:
+        import gradio
+
+        from app.ui import build
+    except ImportError:
+        target = "/docs"
+    else:
+        gradio.mount_gradio_app(app, build(), path="/demo")
+        target = "/demo"
+
+    @app.get("/", include_in_schema=False)
+    def home() -> RedirectResponse:
+        return RedirectResponse(target)
 
 
 app = create_app()

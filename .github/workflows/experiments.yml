@@ -1,0 +1,22 @@
+name: experiments
+
+# Reproduce every result at full size and keep the files as a downloadable artifact. Manual: it takes
+# a long time and the committed results already come from this command.
+on:
+  workflow_dispatch:
+
+jobs:
+  full:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install
+        run: uv sync --locked
+      - name: Run every experiment and write the summary
+        run: uv run python -m experiments.run all --out reproduced
+      - uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: reproduced/

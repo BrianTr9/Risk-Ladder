@@ -7,7 +7,8 @@
 .hypothesis
 .coverage
 z_*.md
-results
+results/raw
+results/smoke
 tests
 docs
 bench

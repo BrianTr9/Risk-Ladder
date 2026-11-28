@@ -18,7 +18,7 @@ app = [
     "pydantic>=2.7",
 ]
 demo = [
-    "gradio>=5.0",  # the interactive demo (a later phase); not needed by the API image
+    "gradio>=5.0",  # the interactive demo, served at /demo when installed
 ]
 exp = [
     "matplotlib>=3.9",
@@ -38,6 +38,7 @@ dev = [
     "pydantic>=2.7",
     "pytest-cov>=7.1.0",
     "allpairspy>=2.5.1",
+    "gradio>=5.0",
 ]
 
 [build-system]
