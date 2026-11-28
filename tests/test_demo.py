@@ -74,3 +74,17 @@ def test_the_demo_page_is_served_when_gradio_is_installed():
     page = client.get("/demo/")
     assert page.status_code == 200 and "gradio" in page.text.lower()
     assert client.post("/plan", json={"map": TEXT, "delta": 0.05}).status_code == 200
+
+
+def test_both_plan_panels_use_one_colour_scale():
+    fig, _ = demo.plan_view(TEXT, 0.01, 0.01, 50.0)
+    limits = {tuple(round(v, 12) for v in im.get_clim()) for ax in fig.axes for im in ax.images[1:]}
+    assert len(limits) == 1 and next(iter(limits))[0] == 0.0
+
+
+def test_the_readme_image_script_writes_the_demos_own_output(tmp_path):
+    from scripts import render_demo_image
+
+    table = render_demo_image.render(tmp_path / "demo.png", dpi=60)
+    assert (tmp_path / "demo.png").stat().st_size > 1000
+    assert "Constrained to 1%" in table

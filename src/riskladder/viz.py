@@ -30,11 +30,14 @@ def plot_map(
     title: str | None = None,
     cmap: str = "viridis",
     value_label: str | None = None,
+    vmin: float | None = None,
+    vmax: float | None = None,
 ) -> Axes:
     """Draw tiles, an optional per-cell value heatmap and optional policy arrows.
 
     `values` is a (rows, cols) float array (NaN where unset); `policy` is a (rows, cols) array
     of action indices (negative where unset). Dash arrows are drawn thicker than move arrows.
+    Pass the same `vmin` and `vmax` to several panels so that one colour means one value.
     """
     import matplotlib.pyplot as plt
     from matplotlib.colors import to_rgb
@@ -46,7 +49,12 @@ def plot_map(
 
     if values is not None:
         image = ax.imshow(
-            np.ma.masked_invalid(values), cmap=cmap, alpha=0.85, interpolation="nearest"
+            np.ma.masked_invalid(values),
+            cmap=cmap,
+            alpha=0.85,
+            interpolation="nearest",
+            vmin=vmin,
+            vmax=vmax,
         )
         colourbar = ax.figure.colorbar(image, ax=ax, fraction=0.046, pad=0.04)
         if value_label:

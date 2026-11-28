@@ -66,10 +66,11 @@ def _grids(text: str, result: service.PlanResult, p_slip: float):
     return mdp.to_grid(risk, fill=np.nan), np.array(heavy.actions)
 
 
-def _draw(fig: Figure, ax, layout, risk, policy, title: str) -> None:
+def _draw(ax, layout, risk, policy, title: str, vmax: float) -> None:
     plot_map(
-        layout, values=risk, policy=policy, ax=ax, title=title, value_label="P(fail from cell)"
-    )
+        layout, values=risk, policy=policy, ax=ax, title=title, value_label="P(fail from cell)",
+        vmin=0.0, vmax=vmax,
+    )  # fmt: skip
 
 
 def _row(label: str, r: service.PlanResult) -> str:
@@ -93,12 +94,16 @@ def plan_view(text: str, p_slip: float, delta: float, penalty: float):
     fig = Figure(figsize=(0.3 * layout.cols + 2.5, 0.3 * layout.rows * panels[0] + 1.5))
     axes = fig.subplots(*panels)
     bound_label = f"Constrained, P(fail) <= {100 * delta:g}%"
-    for ax, label, result in (
-        (axes[0], "Environment optimum", environment),
-        (axes[1], bound_label, bounded),
-    ):
-        risk, policy = _grids(text, result, p_slip)
-        _draw(fig, ax, layout, risk, policy, label)
+    panels = [
+        (ax, label, *_grids(text, result, p_slip))
+        for ax, label, result in (
+            (axes[0], "Environment optimum", environment),
+            (axes[1], bound_label, bounded),
+        )
+    ]
+    shared = max(float(np.nanmax(risk)) for _, _, risk, _ in panels) or 1.0  # one scale for both
+    for ax, label, risk, policy in panels:
+        _draw(ax, layout, risk, policy, label, shared)
     fig.tight_layout()
     parts = len(bounded.components)
     note = "" if parts == 1 else f" The constrained plan mixes {parts} policies per episode."

@@ -10,9 +10,9 @@ Python (NumPy, SciPy), FastAPI, Gradio, Docker, more than 880 tests, CI/CD to a 
 
 Each dot is one way of learning the same ten maps (five runs per map). Further left means fewer rovers destroyed while learning, lower means closer to the best possible plan at the end. The structured model that plans under a risk bound (bottom left) lost 1 rover on average where Q-learning lost 1,252.
 
-The live demo plans a mission for a map you pick or generate. Here it compares the environment's own optimum with a plan whose failure probability is bounded at 1% (arrows are the policy, colour is the probability of losing the rover from each cell):
+The live demo plans a mission for a map you pick or generate. This is its output for the first example map, comparing the environment's own optimum with a plan whose failure probability is bounded at 1%. Arrows are the policy, colour is the probability of losing the rover from each cell (one scale for both panels), red cells are hazards and the green cell is the goal. The optimum loses the rover with probability 3.91% at an expected cost of 29.44; the bounded plan loses it with probability 1.00% at 29.59.
 
-![The live demo](docs/img/demo.jpg)
+![The demo's plan view](docs/img/demo.png)
 
 ## The problem
 
