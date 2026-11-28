@@ -1,7 +1,7 @@
 [project]
 name = "riskladder"
 version = "0.1.0"
-description = "Exact benchmarking of safe planning and learning for autonomous agents under model uncertainty."
+description = "Risk-bounded planning and learning for a rover on hazard maps, evaluated exactly: constrained MDPs, a safety shield, and model-free and model-based RL."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -22,7 +22,6 @@ demo = [
 ]
 exp = [
     "matplotlib>=3.9",
-    "pyyaml>=6.0",
 ]
 
 [dependency-groups]

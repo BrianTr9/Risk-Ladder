@@ -160,7 +160,7 @@ E1 compared the shield only with Q-learning, on maps where the safe route is alr
 
 ![Ablation](../results/figures/e1b_ablation.png)
 
-Rovers lost while learning; final regret as median [quartiles]; runs whose final policy loops:
+Rovers lost while learning; final regret as median [quartiles]; runs whose final policy loops. The other configurations, and the slip sweep, are in [results/e1b.md](../results/e1b.md):
 
 | Configuration | dilemma (10 maps) | ridge (12 maps) |
 |---|---|---|

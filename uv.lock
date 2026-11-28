@@ -1783,7 +1783,6 @@ demo = [
 ]
 exp = [
     { name = "matplotlib" },
-    { name = "pyyaml" },
 ]
 
 [package.dev-dependencies]
@@ -1809,7 +1808,6 @@ requires-dist = [
     { name = "matplotlib", marker = "extra == 'exp'", specifier = ">=3.9" },
     { name = "numpy", specifier = ">=2.0" },
     { name = "pydantic", marker = "extra == 'app'", specifier = ">=2.7" },
-    { name = "pyyaml", marker = "extra == 'exp'", specifier = ">=6.0" },
     { name = "scipy", specifier = ">=1.13" },
     { name = "uvicorn", marker = "extra == 'app'", specifier = ">=0.30" },
 ]
