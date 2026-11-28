@@ -12,9 +12,11 @@ from __future__ import annotations
 import argparse
 import sys
 import time
+from pathlib import Path
 
 from gradio_client import Client
 
+sys.path.insert(0, str(Path(__file__).parents[1]))  # so that `python scripts/smoke_space.py` works
 from scripts import smoke_api
 
 

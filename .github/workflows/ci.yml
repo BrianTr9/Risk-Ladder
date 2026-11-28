@@ -49,6 +49,10 @@ jobs:
     # secret HF_TOKEN); until then the pipeline stops after the container check. The Space is a
     # Gradio one on ZeroGPU hardware, because a free account cannot create a Docker or CPU Space.
     if: github.ref == 'refs/heads/main' && vars.HF_SPACE != ''
+    # two pushes in a row must not deploy at the same time; the newer one wins
+    concurrency:
+      group: deploy-space
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
