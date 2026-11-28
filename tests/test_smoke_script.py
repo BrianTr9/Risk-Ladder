@@ -60,6 +60,11 @@ def test_smoke_script_reports_an_unreachable_server_as_an_error():
         smoke_api.main(["--url", "http://127.0.0.1:9", "--calls", "1"])
 
 
+def test_stale_template_files_are_never_part_of_the_upload(tmp_path):
+    names = deploy_space.stage(tmp_path, "abc")
+    assert not set(deploy_space.STALE) & set(names)  # they are deleted from the Space, not sent
+
+
 def test_deploy_stages_only_what_the_space_needs(tmp_path):
     names = deploy_space.stage(tmp_path, "abc1234def")
     assert {"space_app.py", "requirements.txt", "README.md", "LICENSE", "COMMIT_SHA"} <= set(names)

@@ -27,6 +27,9 @@ FILES = {
 }
 FOLDERS = ["src", "app", "experiments/maps", "results"]  # the demo shows these maps and results
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", "raw", "smoke")
+# Files the "blank" template may have left in a new Space. A stray `app.py` would sit next to the
+# `app/` package, so it is removed rather than left to import order.
+STALE = ["app.py"]
 TIMEOUT_SECONDS = 20 * 60
 
 
@@ -54,7 +57,11 @@ def main() -> int:
         files = stage(Path(tmp), commit)
         print(f"uploading {len(files)} files to {space}")
         api.upload_folder(
-            folder_path=tmp, repo_id=space, repo_type="space", commit_message=f"Deploy {commit[:7]}"
+            folder_path=tmp,
+            repo_id=space,
+            repo_type="space",
+            commit_message=f"Deploy {commit[:7]}",
+            delete_patterns=STALE,
         )
     head = api.repo_info(space, repo_type="space").sha  # the Space's own commit, new or unchanged
 
