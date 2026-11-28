@@ -19,7 +19,7 @@ from pathlib import Path
 
 from bench import latency
 
-from experiments import e0, e1, e1b, e2, e3, e4, e5, summary
+from experiments import e0, e1, e1b, e1c, e2, e3, e4, e5, summary
 
 RESULTS = Path(__file__).parents[1] / "results"
 
@@ -33,6 +33,7 @@ EXPERIMENTS: dict[str, tuple[str, Callable, list[str]]] = {
     "e4": ("learners and generalisation to new maps", e4.main, ["--quick"]),
     "e1": ("the cost of learning and prior knowledge", e1.main, ["--quick"]),
     "e1b": ("the shield on SARSA, two map families", e1b.main, ["--quick"]),
+    "e1c": ("which potential shaping should follow", e1c.main, ["--quick"]),
 }
 
 

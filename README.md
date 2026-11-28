@@ -31,7 +31,7 @@ Each rung removes one piece of knowledge from the agent. The rungs also mark whe
 
 1. The oracle gives the expected cost and the failure probability of any policy exactly. At a failure probability of 0.001 it takes 0.17 ms, where a Monte Carlo estimate accurate to 10% needs 383,776 rollouts, 2,043 times as long ([E0](#exact-evaluation-versus-monte-carlo-e0)).
 2. A penalty is not a constraint. One fixed failure price broke a 1% bound on 7 of 12 maps (worst 1.98%); the constrained solver met it on all 12 at the minimum cost, with a certificate of optimality ([E3](#a-failure-penalty-is-not-a-risk-constraint-e3)). A planner that believes the slip is 16 times lower than it is exceeds the bound by 13.7 percentage points ([E2](#what-a-wrong-slip-estimate-costs-e2)).
-3. Prior knowledge buys back the cost of learning. A structured model lost 17 rovers while learning against 1,252 for Q-learning, and 1 when planning under a risk bound; a safety shield cut a model-free learner's losses about fivefold; features computed from the map carry over to unseen maps with a median regret of 18.7% ([E1](#what-prior-knowledge-buys-back-e1), [E4](#learning-from-samples-e4)). Reward shaping did not help, and the results say so.
+3. Prior knowledge buys back the cost of learning. A structured model lost 17 rovers while learning against 1,252 for Q-learning, and 1 when planning under a risk bound; a safety shield cut a model-free learner's losses about fivefold; features computed from the map carry over to unseen maps with a median regret of 18.7% ([E1](#what-prior-knowledge-buys-back-e1), [E4](#learning-from-samples-e4)). Reward shaping lost more rovers when its potential followed the shortest route (which hugs the hazards) and about five times fewer when it followed a route that keeps clear of them, 252 against 1,252 ([E1c](#which-potential-should-shaping-follow-e1c)).
 
 The numbers hold for the generated map families in `experiments/maps/`, which are grid worlds, not real vehicles.
 
@@ -74,7 +74,7 @@ The structured model learner knows the geometry of the map and learns the slip p
 
 ## Limitations
 
-The environment is small and the noise is a single sideways slip. The shield assumes a known upper bound on the slip, and the constrained planner's guarantee holds only if its model is right. The learners are tabular or linear; there is no deep reinforcement learning. Tail risk (CVaR) is a Monte Carlo estimate. The step sizes were tuned on a small grid and the best values lie on its edge. Shaping did not help and I have not found out why.
+The environment is small and the noise is a single sideways slip. The shield assumes a known upper bound on the slip, and the constrained planner's guarantee holds only if its model is right. The learners are tabular or linear; there is no deep reinforcement learning. Tail risk (CVaR) is a Monte Carlo estimate. The step sizes were tuned on a small grid and the best values lie on its edge. The shaping scales in E1c are not tuned, and the clear-of-hazards potential assumes the map has a route that keeps clear of hazards (the dilemma maps do; E1c was not run on the ridge maps).
 
 ## Reproduce
 
@@ -217,11 +217,27 @@ What the numbers say, including the parts that did not go as planned:
 
 - Knowing the map's geometry and learning only the hidden slip probabilities and costs loses 98.7% fewer rovers than Q-learning (17 against 1,252) and learns in 40,000 steps; planning under a failure-probability bound loses one on average. A model-based learner that knows nothing of the map (MB-count) already beats every model-free variant on both axes, so most of the gain comes from planning on a learned model, and the map adds a further 16x fewer rovers lost.
 - The shield works as intended on its own: Q + shield loses 5x fewer rovers than Q (239 against 1,252) at the same median regret. It bounds the risk of each step, not the probability of failing over an episode.
-- Shaping did **not** help here. Q + shaping lost more rovers than Q (2,815 against 1,252) at the same median regret, and the shaping scale chosen by tuning (2.0) sat at the edge of the grid. I have not isolated why. Shaping preserves the optimal policy (checked against the oracle) but not the safety of the learning process.
+- Shaping along the shortest route did not help: Q + shaping lost more rovers than Q (2,815 against 1,252) at the same median regret. The cause is the choice of potential, not shaping itself; see E1c below, where a potential that follows a route clear of the hazards cuts the losses to 252.
 - SARSA is the best model-free learner on these maps, but see E1b: that does not carry over to the ridge maps.
 - On these maps the optimum already avoids the corridor, so the shield costs little in regret here; E1b tests maps where the best policy accepts some risk.
 
 Reproduce with `uv run python -m experiments.e1`; see [docs/learning.md](docs/learning.md).
+
+### Which potential should shaping follow? (E1c)
+
+Potential-based shaping keeps the optimal policy whatever the potential, and the oracle confirms it, so the potential cannot change what is best. It changes what a learner does while it explores. In E1 the potential was the distance along the shortest hazard-free route, which on the dilemma maps runs beside the hazard strip, so a learner pulled along it was pulled towards the hazard. E1c repeats E1's Q-learning with a potential that follows the shortest route keeping one cell clear of every hazard.
+
+| Shaping | Rovers lost while learning | Final regret: median [quartiles] | Runs that loop |
+|---|---|---|---|
+| none | 1,252 ± 104 | 12.0% [8.0 to 24.0] | 3 of 50 |
+| shortest route, scale 1 | 2,345 ± 150 | 13.0% [9.1 to 27.2] | 3 of 50 |
+| shortest route, scale 2 | 2,815 ± 250 | 12.3% [9.4 to 30.9] | 3 of 50 |
+| route clear of hazards, scale 1 | 486 ± 207 | 13.3% [9.0 to 32.9] | 5 of 50 |
+| route clear of hazards, scale 2 | 252 ± 119 | 12.1% [9.2 to 26.5] | 3 of 50 |
+
+![Potential](results/figures/e1c_potential.png)
+
+The shortest-route potential makes the losses grow with its scale, and the clear-of-hazards potential makes them fall, at the same median regret. Both lose the same share of runs to looping policies, so shaping does not fix that. A potential built from the map alone, with no blocked actions, loses about as few rovers as the shield (252 against 239). The scales are not tuned and the clear-of-hazards route needs the map to have one. Reproduce with `uv run python -m experiments.e1c`.
 
 ### Does the shield help once the learner is SARSA? (E1b)
 
@@ -243,7 +259,7 @@ Rovers lost while learning; final regret as median [quartiles]; runs whose final
 - **The shield does help, and E1 understated it.** On ridge maps SARSA loses thousands of rovers and in a quarter of the runs (9 of 36) ends with a policy that loops until the horizon, which is what makes its mean regret 438% while its median is 20%. SARSA + shield loses no rovers, never loops, and has a median regret of 7%. On dilemma maps it cuts SARSA's losses 2.5x (168 to 68) at the same median regret. The slip sweep agrees: at slip 0.05, 113 to 10 rovers lost; at 0.3, 216 to 154.
 - **Caution has a price where the optimum takes risk.** On ridge maps the optimal policy fails 3% of the time; the shielded learners fail 0%, and their median regret (7 to 14%) includes that price. The constrained planner, given a 1% bound, lands at 1.0% failure and 2.6% regret, which is the better trade, at the cost of knowing the geometry.
 - **SARSA is not safe by itself.** It looked safe on the dilemma maps because the best route there is the safe one.
-- **Shaping did not help in any setting** (dilemma: higher median regret for SARSA; ridge: no change). The tuned scale is again at the edge of the grid. The tuning objective (mean regret over the whole run) rewards early speed, so a candidate explanation is that it picked a scale that is fast early and worse at the end; I have not tested that, so shaping stays in the repository as an honest negative result rather than as a claimed benefit.
+- **Shaping along the shortest route did not help in any setting** (dilemma: higher median regret for SARSA; ridge: no change). E1c explains why on the dilemma maps; this table was not rerun with the other potential.
 - **A wrong assumed bound is visible.** At true slip 0.3 a dash slips with probability 0.6, above the 0.4 the shield and the planner assume, and the constrained planner's median regret rises to 35% (its failure probability stays 0%).
 
 Reproduce with `uv run python -m experiments.e1b`.

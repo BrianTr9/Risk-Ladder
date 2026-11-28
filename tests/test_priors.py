@@ -28,12 +28,15 @@ def shaped_model(mdp, potential):
     return dataclasses.replace(mdp, cost=mdp.cost + ahead - phi[:, None])
 
 
+@pytest.mark.parametrize("route", ["free", "safe"])
 @pytest.mark.parametrize("p_slip", [0.0, 0.2])
 @pytest.mark.parametrize("scale", [0.5, 1.0, 3.0])
-def test_shaping_shifts_every_value_by_the_potential_and_keeps_the_best_policy(p_slip, scale):
-    spec = MapSpec(LAYOUT, noise=Noise(p_slip=p_slip))
+def test_shaping_shifts_every_value_by_the_potential_and_keeps_the_best_policy(
+    p_slip, scale, route
+):
+    spec = MapSpec(DETOUR, noise=Noise(p_slip=p_slip))
     mdp = RoverEnv(spec).model()
-    potential = Shaper(scale).potential(LAYOUT)
+    potential = Shaper(scale, route).potential(DETOUR)
     original = value_iteration(mdp)
     shaped = value_iteration(shaped_model(mdp, potential))
     phi = potential[mdp.cells[:, 0], mdp.cells[:, 1]]
@@ -165,3 +168,22 @@ def test_shaping_speeds_up_learning_on_a_larger_map():
         train(learner, env.sample_interface(), 40_000, np.random.default_rng(0))
         regret[scale] = scorer.score(learner).regret
     assert regret[1.0] < regret[None]
+
+
+def test_the_safe_route_potential_is_higher_where_the_short_route_hugs_a_hazard():
+    free = Shaper(1.0, "free").potential(DETOUR)
+    safe = Shaper(1.0, "safe").potential(DETOUR)
+    corridor = (1, 4)  # directly above the hazard strip: on the short route, not on the safe one
+    assert safe[corridor] > free[corridor]
+    assert (safe >= free - 1e-9).all()  # a route with more constraints is never shorter
+    assert safe[1, 7] == 0 and free[1, 7] == 0  # the goal is the same
+
+
+def test_an_unknown_route_is_rejected_and_the_route_reaches_the_learner_config():
+    with pytest.raises(ValueError, match="route"):
+        Shaper(1.0, "scenic")
+    learner = QLearning(shaping=2.0, shaping_route="safe")
+    assert learner.config["shaping_route"] == "safe" and QLearning(**learner.config).config == (
+        learner.config
+    )
+    assert QLearning().config["shaping_route"] == "free"

@@ -32,6 +32,7 @@ class LinearQ:
         shield: Shield | dict | None = None,
         shaping: float | None = None,
         shield_at_run: bool = True,
+        shaping_route: str = "free",
     ) -> None:
         if not 0.0 < alpha <= 1.0:
             raise ValueError("alpha must be in (0, 1]")
@@ -43,7 +44,7 @@ class LinearQ:
             raise ValueError("eps_fraction must be in (0, 1]")
         self.alpha, self.alpha_decay = alpha, alpha_decay
         self.eps_start, self.eps_end, self.eps_fraction = eps_start, eps_end, eps_fraction
-        self.priors = Priors(shield, shaping, shield_at_run)
+        self.priors = Priors(shield, shaping, shield_at_run, shaping_route)
         self.config = {
             "alpha": alpha, "alpha_decay": alpha_decay, "eps_start": eps_start,
             "eps_end": eps_end, "eps_fraction": eps_fraction, **self.priors.config,

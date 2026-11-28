@@ -98,13 +98,18 @@ job of the constrained solver, not of a shield.
 
 ### Reward shaping (`safety/shaping.py`)
 
-A potential `Phi(s) = scale * (hazard-free steps to the goal)`, zero in the absorbing outcomes. A
+A potential `Phi(s) = scale * (steps to the goal)`, zero in the absorbing outcomes. The steps are
+counted along one of two routes: the shortest hazard-free route (`route="free"`) or the shortest
+route that also keeps one cell clear of every hazard (`route="safe"`). A
 transition costs `c + Phi(s') - Phi(s)`, so the shaped cost of an episode is the original minus
 `Phi(s0)`, whatever the policy did (Ng, Harada and Russell, 1999). Shaped and original values differ
 by the potential, so the best policy is unchanged; a test checks this against the oracle. The
-oracle always scores on the original cost. The scale does not affect correctness, only how much of
-the cost-to-go the potential already explains, so it is tuned (experiment E1) rather than read from
-the hidden step cost. Linear Q clamps its bootstrap at the lowest value the potential allows.
+oracle always scores on the original cost. Neither the scale nor the route affects correctness. The
+scale decides how much of the cost-to-go the potential already explains, so it is tuned rather than
+read from the hidden step cost. The route decides what the potential teaches while the learner
+explores: the shortest route hugs the hazards on the dilemma maps and makes Q-learning lose more
+rovers, while the route that keeps clear makes it lose fewer (experiment E1c). Linear Q clamps its
+bootstrap at the lowest value the potential allows.
 
 ## Model-based learners (`agents/model_based.py`)
 

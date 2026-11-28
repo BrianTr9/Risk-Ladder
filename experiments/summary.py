@@ -88,6 +88,15 @@ def _e1b(d: dict) -> list[str]:
     ]
 
 
+def _e1c(d: dict) -> list[str]:
+    lost = {k: v["train_failures"]["mean"] for k, v in d["configs"].items()}
+    return [
+        f"Rovers lost while learning: no shaping {lost['no shaping']:,.0f}, potential along the "
+        f"shortest route {lost['shortest route, scale 2']:,.0f}, potential along a route clear of "
+        f"hazards {lost['route clear of hazards, scale 2']:,.0f} (scale 2 each)."
+    ]
+
+
 def _e4(d: dict) -> list[str]:
     g, m = d["generalisation"], d["match"]
     r = g["final"]["regret"]
@@ -139,6 +148,9 @@ SECTIONS = [
      "Is exact evaluation worth having?", None, _e0, False),
     ("bench", "Oracle latency", "How large a map can the oracle solve?",
      "bench_latency.png", _bench, False),
+    ("e1c", "Which potential shaping follows (E1c)",
+     "Why did shaping lose rovers, and does a different potential fix it?",
+     "e1c_potential.png", _e1c, False),
     ("e1b", "Shield on SARSA (E1b)", "Does the shield help once the learner is SARSA?",
      "e1b_ablation.png", _e1b, False),
 ]  # fmt: skip

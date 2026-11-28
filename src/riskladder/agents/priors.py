@@ -20,9 +20,10 @@ class Priors:
         shield: Shield | dict | None = None,
         shaping: float | None = None,
         shield_at_run: bool = True,
+        shaping_route: str = "free",
     ) -> None:
         self.shield = Shield(**shield) if isinstance(shield, dict) else shield
-        self.shaper = None if not shaping else Shaper(float(shaping))
+        self.shaper = None if not shaping else Shaper(float(shaping), shaping_route)
         self.shield_at_run = shield_at_run
         self._cache: dict[int, tuple[Layout, np.ndarray | None, np.ndarray | None]] = {}
 
@@ -31,6 +32,7 @@ class Priors:
         return {
             "shield": None if self.shield is None else self.shield.config,
             "shaping": None if self.shaper is None else self.shaper.scale,
+            "shaping_route": "free" if self.shaper is None else self.shaper.route,
             "shield_at_run": self.shield_at_run,
         }
 
