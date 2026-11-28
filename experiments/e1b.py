@@ -194,21 +194,20 @@ def plot_ablation(result: dict, path: Path) -> None:
         for ax, family in zip(axes, FAMILIES, strict=True):
             for i, (label, c) in enumerate(result["families"][family]["configs"].items()):
                 x, y = c["train_failures"], c["regret"]
-                half = np.nan_to_num(y["ci95"])
-                below = np.minimum(half, y["mean"])  # regret cannot be negative
+                spread = 100 * np.array([[y["median"] - y["q1"]], [y["q3"] - y["median"]]])
                 ax.errorbar(
-                    x["mean"], 100 * y["mean"], xerr=np.nan_to_num(x["ci95"]),
-                    yerr=100 * np.array([[below], [half]]), fmt="o", markersize=8,
+                    x["mean"], 100 * y["median"], xerr=np.nan_to_num(x["ci95"]),
+                    yerr=spread, fmt="o", markersize=8,
                     color=COLOURS[label], markeredgecolor=style.SURFACE, markeredgewidth=2,
                     elinewidth=1.2, capsize=0,
                 )  # fmt: skip
-                ax.annotate(letters[i], (x["mean"], 100 * y["mean"]), xytext=(8, 6),
+                ax.annotate(letters[i], (x["mean"], 100 * y["median"]), xytext=(8, 6),
                             textcoords="offset points", fontsize=9, color=style.INK)  # fmt: skip
             ax.set_xscale("symlog", linthresh=10)
             ax.set_yscale("symlog", linthresh=1)
             ax.set_title(f"{family} maps")
             ax.set_xlabel("Rovers lost while learning (mean per run)")
-        axes[0].set_ylabel("Final regret, % of the optimal cost")
+        axes[0].set_ylabel("Final regret, median and quartiles (% of the optimal cost)")
         names = list(result["families"]["dilemma"]["configs"])
         key = "    ".join(f"{letters[i]} = {name}" for i, name in enumerate(names))
         fig.text(0.5, 0.01, key, ha="center", fontsize=8.5, color=style.INK_2)

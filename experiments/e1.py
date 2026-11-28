@@ -146,28 +146,45 @@ FAMILY = {  # model-free in blue, model-based in orange
 }  # fmt: skip
 
 
+LABEL_PLACEMENT = {  # (dx, dy) in points from the dot; the long labels sit on leader lines
+    "Q": (6, 34),
+    "Q + shaping": (6, 58),
+    "Q + shield": (-40, 36),
+    "Q + shield + shaping": (-22, 62),
+    "SARSA": (-14, -24),
+    "MB-count": (12, -18),
+    "MB-struct": (8, 12),
+    "MB-struct + CMDP": (8, 12),
+}
+
+
 def plot_pareto(result: dict, path: Path) -> None:
+    """Rovers lost while learning against final regret. Regret is its median with the quartiles:
+    a few looping policies make its mean misleading (see experiments/common.py)."""
     import matplotlib.pyplot as plt
 
     with style.context():
-        fig, ax = plt.subplots(figsize=(7.4, 4.6))
+        fig, ax = plt.subplots(figsize=(7.6, 4.8))
         for label, c in result["configs"].items():
             x, y = c["train_failures"], c["regret"]
+            spread = 100 * np.array([[y["median"] - y["q1"]], [y["q3"] - y["median"]]])
             ax.errorbar(
-                x["mean"], 100 * y["mean"], xerr=np.nan_to_num(x["ci95"]),
-                yerr=100 * np.nan_to_num(y["ci95"]), fmt="o", markersize=8, color=FAMILY[label],
-                markeredgecolor=style.SURFACE, markeredgewidth=2, elinewidth=1.2, capsize=0,
-                alpha=0.95,
+                x["mean"], 100 * y["median"], xerr=np.nan_to_num(x["ci95"]), yerr=spread,
+                fmt="o", markersize=8, color=FAMILY[label], markeredgecolor=style.SURFACE,
+                markeredgewidth=2, elinewidth=1.2, capsize=0, alpha=0.95,
             )  # fmt: skip
-            ax.annotate(label, (x["mean"], 100 * y["mean"]), xytext=(7, 6),
-                        textcoords="offset points", fontsize=8.5, color=style.INK_2)  # fmt: skip
+            ax.annotate(
+                label, (x["mean"], 100 * y["median"]), xytext=LABEL_PLACEMENT.get(label, (7, 6)),
+                textcoords="offset points", fontsize=8.5, color=style.INK_2,
+                arrowprops={"arrowstyle": "-", "color": style.MUTED, "lw": 0.7, "shrinkA": 0,
+                            "shrinkB": 5},
+            )  # fmt: skip
         ax.set_xscale("symlog", linthresh=10)
         ax.set_yscale("symlog", linthresh=1)
-        ax.set_xlabel("Rovers lost while learning (mean per run, symmetric log scale)")
-        ax.set_ylabel("Final regret, % of the optimal cost (symmetric log scale)")
-        ax.set_title("What it costs to learn, and what you end up with")
-        ax.text(0.99, 0.97, "lower left is better", transform=ax.transAxes, ha="right",
-                va="top", fontsize=8.5, color=style.MUTED)  # fmt: skip
+        ax.set_xlim(left=0)
+        ax.set_xlabel("Rovers lost while learning (mean per run, log scale)")
+        ax.set_ylabel("Distance from the best possible cost, median (%)")
+        ax.set_title("Fewer rovers lost and closer to optimal: lower left is better")
         fig.tight_layout()
         path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(path)

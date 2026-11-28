@@ -2,19 +2,30 @@
 
 [![ci](https://github.com/BrianTr9/Risk-Ladder/actions/workflows/ci.yml/badge.svg)](https://github.com/BrianTr9/Risk-Ladder/actions/workflows/ci.yml)
 
-Exact benchmarking of safe planning and learning for autonomous agents under model uncertainty.
+How much does an AI agent lose while it learns a dangerous job, and what makes it lose less? RiskLadder answers with exact numbers, using a rover that must cross a hazard map without being destroyed. It compares planning, reinforcement learning and model-based learning, and measures risk by computation instead of simulation.
 
-Live demo: https://briantr9-risk-ladder.hf.space (free Space, so the first request after a quiet period can take a minute). Write-up: [docs/writeup.md](docs/writeup.md). Every number below comes from `results/` (see [results/SUMMARY.md](results/SUMMARY.md), generated).
+Python (NumPy, SciPy), FastAPI, Gradio, Docker, more than 880 tests, CI/CD to a live demo: https://briantr9-risk-ladder.hf.space (free Space, so the first request after a quiet period can take a minute). Read the [write-up](docs/writeup.md) first, then the [design decisions](docs/decisions.md). Every number below comes from `results/` (see [results/SUMMARY.md](results/SUMMARY.md), generated).
 
-![Rovers lost while learning against final regret](results/figures/e1_pareto.png)
+![Rovers lost while learning against distance from the best possible cost](results/figures/e1_pareto.png)
 
-Eight ways to learn the same ten maps. Lower left is better: fewer rovers lost while learning and a smaller final regret.
+Each dot is one way of learning the same ten maps (five runs per map). Further left means fewer rovers destroyed while learning, lower means closer to the best possible plan at the end. The structured model that plans under a risk bound (bottom left) lost 1 rover on average where Q-learning lost 1,252.
 
 ## The problem
 
 A rover knows its map but not exactly how it moves: it may slip sideways, and entering a hazard loses it. Should it plan with a model or learn from experience? How can it learn without being destroyed while learning? And if the model it trusts is wrong, how much does that cost?
 
 The maps are small enough to solve exactly, so every agent's regret and every failure probability are computed in closed form instead of estimated from noisy rollouts.
+
+Terms used below:
+
+| Term | Meaning |
+|---|---|
+| Regret | How much more the agent's expected cost is than the best possible, as a percentage |
+| P(fail) | The probability that the rover is lost |
+| Oracle | The exact computation of a policy's cost and P(fail), with no simulation |
+| Constrained MDP | The planning problem of finding the cheapest plan whose P(fail) stays under a bound |
+| Safety shield | A rule that blocks actions that could lose the rover in one step |
+| Model-free, model-based | Learning values directly from samples, or learning a model of the world and then planning on it |
 
 ## The ladder
 
