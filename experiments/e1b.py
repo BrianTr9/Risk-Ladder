@@ -19,16 +19,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
 
-from experiments import e1, e4
+from experiments import e1
 from experiments import plotting as style
+from experiments.common import final_summary, relative, run_specs
 from riskladder.env import Noise, generate, load_map, save_map
-from riskladder.harness import RunSpec, summarize
+from riskladder.harness import RunSpec
 from riskladder.harness.runner import write_jsonl
 
 ROOT = Path(__file__).parents[1]
@@ -67,13 +66,8 @@ def configs(tuned: dict) -> dict[str, tuple[str, dict]]:
     }
 
 
-def _pool_size() -> int:
-    return max(1, min(10, (os.cpu_count() or 2) - 1))
-
-
 def _run_all(jobs: list[tuple[str, RunSpec]]) -> list[tuple[str, dict]]:
-    with ProcessPoolExecutor(_pool_size()) as pool:  # results return in submission order
-        records = list(pool.map(e4._run_one, [spec for _, spec in jobs], chunksize=1))
+    records = run_specs([spec for _, spec in jobs])
     return [(label, r) for (label, _), r in zip(jobs, records, strict=True)]
 
 
@@ -119,22 +113,10 @@ def load_tuned() -> dict:
 
 
 def summarise(labelled: list[tuple[str, dict]], names) -> dict:
-    out = {}
-    for label in names:
-        mine = [r for name, r in labelled if name == label]
-        rel = [e4._relative(r) for r in mine]
-        last = [r["checkpoints"][-1] for r in rel]
-        summary = summarize(rel)
-        out[label] = {
-            "train_failures": e1._stat(np.array([c["train_failures"] for c in last], float)),
-            "regret": e1._stat(np.array([c["regret"] for c in last])),
-            "p_fail": e1._stat(np.array([c["p_fail"] for c in last])),
-            "optimal_p_fail": float(np.mean([r["optimal_p_fail"] for r in mine])),
-            "learned_fraction": summary["learned_fraction"],
-            "learned_median": summary["learned_median"],
-            "runs": len(mine),
-        }
-    return out
+    return {
+        label: final_summary([relative(r, TAU) for name, r in labelled if name == label])
+        for label in names
+    }
 
 
 def family_runs(family: str, tuned: dict, quick: bool, raw: Path | None) -> dict:
@@ -236,23 +218,30 @@ def plot_ablation(result: dict, path: Path) -> None:
         plt.close(fig)
 
 
-def _row(label: str, c: dict, with_optimum: bool) -> str:
+def _row(label: str, c: dict) -> str:
     f, r, p = c["train_failures"], c["regret"], c["p_fail"]
-    pf = f"{100 * p['mean']:.1f}%" + (
-        f" (optimum {100 * c['optimal_p_fail']:.1f}%)" if with_optimum else ""
-    )
     return (
         f"| {label} | {f['mean']:,.0f} ± {np.nan_to_num(f['ci95']):,.0f} | "
-        f"{100 * r['mean']:.1f}% ± {100 * np.nan_to_num(r['ci95']):.1f} | {pf} | "
+        f"{100 * r['median']:.1f}% [{100 * r['q1']:.1f} to {100 * r['q3']:.1f}] "
+        f"(mean {100 * r['mean']:.0f}%) | {c['looping_runs']} of {c['runs']} | "
+        f"{100 * p['mean']:.1f}% (optimum {100 * c['optimal_p_fail']:.1f}%) | "
         f"{100 * c['learned_fraction']:.0f}% |"
     )
 
 
+HEADER = [
+    "| Configuration | Rovers lost while learning | Final regret: median [quartiles] (mean) |"
+    " Runs that loop | Final P(fail) | Learned |",
+    "|---|---|---|---|---|---|",
+]
+
+
 def to_markdown(result: dict) -> str:
-    lines = ["E1b: does the shield help SARSA, and what does caution cost?\n"]
-    header = [
-        "| Configuration | Rovers lost while learning | Final regret | Final P(fail) | Learned |",
-        "|---|---|---|---|---|",
+    lines = [
+        "E1b: does the shield help SARSA, and what does caution cost?\n",
+        "Final regret is a fraction of the optimal cost and is heavy-tailed (a policy that loops "
+        "pays until the horizon), so the median and quartiles come first. A run 'loops' when its "
+        "final policy times out with probability above 0.5%.\n",
     ]
     for family, data in result["families"].items():
         t = result["tuned"][family]
@@ -261,8 +250,8 @@ def to_markdown(result: dict) -> str:
             f"{data['budget']:,} steps; step sizes Q {t['q'].get('alpha', 'default')}, "
             f"SARSA {t['sarsa'].get('alpha', 'default')}, shaping scale {t['shaping']} "
             f"(tuned on {t.get('tuned_on', 'nothing: defaults')}).\n",
-            *header,
-            *(_row(k, c, True) for k, c in data["configs"].items()),
+            *HEADER,
+            *(_row(k, c) for k, c in data["configs"].items()),
             "",
         ]
     sweep = result["slip_sweep"]
@@ -271,12 +260,7 @@ def to_markdown(result: dict) -> str:
         f"{sweep['budget']:,} steps (the shield still assumes at most 0.4 for any action):\n"
     )
     for p_slip, configs_ in sweep["slips"].items():
-        lines += [
-            f"True slip {p_slip}:\n",
-            *header,
-            *(_row(k, c, True) for k, c in configs_.items()),
-            "",
-        ]
+        lines += [f"True slip {p_slip}:\n", *HEADER, *(_row(k, c) for k, c in configs_.items()), ""]
     return "\n".join(lines)
 
 

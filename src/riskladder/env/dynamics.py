@@ -95,6 +95,34 @@ def walk_many(
     return Walk(r - PAD, c - PAD, status, rough, collided)
 
 
+class Branches(NamedTuple):
+    """Where every (cell, action, branch) leads over the bare layout, as (rows, cols, A, 3) arrays.
+    Branch 0 is the intended direction, 1 and 2 the sideways slips (the order of the exact model).
+    Rows and columns are where the rover ends (the goal or hazard tile it entered, for those)."""
+
+    rows: np.ndarray
+    cols: np.ndarray
+    status: np.ndarray  # RUNNING, SUCCESS or FAIL
+    rough: np.ndarray  # rough tiles entered
+    collided: np.ndarray  # bumped into a rock
+
+
+def branch_table(layout: Layout) -> Branches:
+    """The outcome geometry of every action from every cell: the one place the learners' features,
+    the shield and the structured model learner read it from."""
+    r, c = (v.ravel() for v in np.indices((layout.rows, layout.cols)))
+    walks = [[], [], [], [], []]
+    for action in ACTIONS:
+        parts = [
+            walk_many(layout, r, c, direction, action.cells)
+            for direction in (action.direction, *PERPENDICULAR[action.direction])
+        ]
+        for field_, values in zip(walks, zip(*parts, strict=True), strict=True):
+            field_.append(np.stack(values, axis=-1))  # (cells, 3)
+    shape = (layout.rows, layout.cols, N_ACTIONS, 3)
+    return Branches(*(np.stack(field_, axis=1).reshape(shape) for field_ in walks))
+
+
 def move_many(
     spec: MapSpec, rows: np.ndarray, cols: np.ndarray, direction: str, cells: int
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:

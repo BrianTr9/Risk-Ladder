@@ -195,3 +195,20 @@ def test_the_learners_do_not_plan_before_the_schedule_says_so():
         agent.observe((1, 1), 1, 1.0, (1, 2), False, False)
         agent.act((1, 1))
     assert agent._parts is plan  # still the old plan: the schedule has not fired
+
+
+def test_an_action_counts_as_known_exactly_when_it_has_been_tried_known_after_times():
+    agent = started(MBCount(known_after=3))
+    s = 1 * LAYOUT.cols + 1
+    for tries in (1, 2, 3):
+        agent.observe((1, 1), 1, 1.0, (1, 2), False, False)
+        known = agent.model(optimistic=False).p_success[s, 1] != 1.0
+        assert known == (tries >= 3)
+
+
+def test_greedy_reports_the_heavier_part_of_a_mixture():
+    agent = started(MBStruct(cmdp=True))
+    light, heavy = np.zeros(LAYOUT.rows * LAYOUT.cols, int), np.ones(LAYOUT.rows * LAYOUT.cols, int)
+    cells = np.array([[1, 1], [1, 2]])
+    agent.mixture = lambda layout, cells: [(0.2, light[:2]), (0.8, heavy[:2])]
+    assert agent.greedy(LAYOUT, cells).tolist() == [1, 1]

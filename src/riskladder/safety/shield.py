@@ -20,7 +20,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from riskladder.env.dynamics import ACTIONS, FAIL, N_ACTIONS, PERPENDICULAR, SUCCESS, walk_many
+from riskladder.env.dynamics import FAIL, N_ACTIONS, SUCCESS, branch_table
 from riskladder.env.layout import PASSABLE, Layout
 
 _EPS = 1e-12
@@ -88,21 +88,13 @@ _GOAL, _HAZARD = -1, -2  # `landing` markers for SUCCESS and FAIL
 def _branches(layout: Layout, p_max: float) -> tuple[np.ndarray, np.ndarray]:
     """One-step failure probability under `p_max`, and where each action lands when it goes as
     intended: (row, col), or (_GOAL, _GOAL) / (_HAZARD, _HAZARD)."""
-    rows, cols = layout.rows, layout.cols
-    r, c = (v.ravel() for v in np.indices((rows, cols)))
-    risk = np.zeros((rows * cols, N_ACTIONS))
-    landing = np.zeros((rows * cols, N_ACTIONS, 2), dtype=int)
-    for a, action in enumerate(ACTIONS):
-        intended = walk_many(layout, r, c, action.direction, action.cells)
-        risk[:, a] = (1.0 - p_max) * (intended.status == FAIL)
-        for side in PERPENDICULAR[action.direction]:
-            slip = walk_many(layout, r, c, side, action.cells)
-            risk[:, a] += 0.5 * p_max * (slip.status == FAIL)
-        landing[:, a, 0] = np.where(intended.status == SUCCESS, _GOAL, intended.rows)
-        landing[:, a, 1] = np.where(intended.status == SUCCESS, _GOAL, intended.cols)
-        fail = np.flatnonzero(intended.status == FAIL)
-        landing[fail, a, :] = _HAZARD
-    return risk.reshape(rows, cols, N_ACTIONS), landing.reshape(rows, cols, N_ACTIONS, 2)
+    b = branch_table(layout)
+    fail = b.status == FAIL
+    risk = (1.0 - p_max) * fail[..., 0] + 0.5 * p_max * fail[..., 1:].sum(axis=-1)
+    landing = np.stack([b.rows[..., 0], b.cols[..., 0]], axis=-1)
+    landing[b.status[..., 0] == SUCCESS] = _GOAL
+    landing[fail[..., 0]] = _HAZARD
+    return risk, landing
 
 
 def _minimax_route(layout: Layout, risk: np.ndarray, landing: np.ndarray) -> np.ndarray:

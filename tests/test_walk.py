@@ -4,7 +4,16 @@ import numpy as np
 import pytest
 
 from riskladder.env import Costs, Layout, MapSpec
-from riskladder.env.dynamics import FAIL, RUNNING, SUCCESS, move_many, walk_many
+from riskladder.env.dynamics import (
+    ACTIONS,
+    FAIL,
+    PERPENDICULAR,
+    RUNNING,
+    SUCCESS,
+    branch_table,
+    move_many,
+    walk_many,
+)
 
 #   row 1: S ~ # . X G
 #   row 2: . . . . . .
@@ -47,3 +56,15 @@ def test_pricing_the_walk_gives_move_many(direction, cells):
     assert (r == w.rows).all() and (c == w.cols).all() and (status == w.status).all()
     expected = 2.3 * w.collided + 0.7 * w.rough + spec.c_fail * (w.status == FAIL)
     assert extra == pytest.approx(expected)
+
+
+def test_the_branch_table_is_each_action_walked_in_its_three_directions():
+    table = branch_table(GRID)
+    rows, cols = GRID.rows, GRID.cols
+    assert table.rows.shape == (rows, cols, len(ACTIONS), 3)
+    r, c = (v.ravel() for v in np.indices((rows, cols)))
+    for a, action in enumerate(ACTIONS):
+        for b, direction in enumerate((action.direction, *PERPENDICULAR[action.direction])):
+            walk = walk_many(GRID, r, c, direction, action.cells)
+            for name in ("rows", "cols", "status", "rough", "collided"):
+                assert (getattr(table, name)[:, :, a, b].ravel() == getattr(walk, name)).all()

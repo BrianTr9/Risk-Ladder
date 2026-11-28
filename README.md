@@ -107,35 +107,35 @@ A planner that believes the rover slips less than it does breaks the risk bound,
 
 ### Learning from samples (E4)
 
-E4: tabular Q-learning, SARSA and a linear Q-learner on map-only features learn the 20 held-out 30 x 30 `field` maps from sampled steps (3 seeds per map, 3,000,000 steps). Every checkpoint is scored exactly by the oracle, so regret has no evaluation noise. Regret is a fraction of the optimal cost; "learned" means at most 5%.
+E4: tabular Q-learning, SARSA and a linear Q-learner on map-only features learn the 20 held-out 30 x 30 `field` maps from sampled steps (3 seeds per map, 3,000,000 steps). Every checkpoint is scored exactly by the oracle. Regret is a fraction of the optimal cost and is heavy-tailed (a policy that loops pays its step costs until the horizon), so the median and quartiles are reported next to the mean, and the runs whose final policy loops are counted.
 
-| Agent | Regret after 3M steps | P(fail) | Runs that learned | Failures while training |
+| Agent | Final regret: median [quartiles] (mean) | Runs that loop | P(fail) | Failures while training |
 |---|---|---|---|---|
-| Q-learning | 39.1% ± 17.2 | 1.8% | 12% | 57,234 |
-| SARSA | 85.0% ± 21.7 | 7.3% | 0% | 50,070 |
-| Linear Q, one map | 40.9% ± 12.0 | 5.3% | 22% | 61,815 |
-| Linear Q, trained on 20 other maps, **0 samples here** | 41.8% ± 11.3 | 3.2% | n/a | n/a |
+| Q-learning | 18.3% [12.6 to 33.7] (mean 39%) | 1 of 60 | 1.8% | 57,234 |
+| SARSA | 57.9% [34.2 to 85.8] (mean 85%) | 2 of 60 | 7.3% | 50,070 |
+| Linear Q, one map | 20.6% [9.5 to 59.4] (mean 41%) | 2 of 60 | 5.3% | 61,815 |
+| Linear Q, trained on 20 other maps, **0 samples here** | 18.7% [8.7 to 48.2] (mean 42%) | 0 of 100 | 3.2% | n/a |
 
 ![Learning curves](results/figures/e4_curves.png)
 
 ![Generalisation](results/figures/e4_generalisation.png)
 
-A linear learner with ten map-only features, trained across 20 other maps, reaches the same regret on a new map that Q-learning reaches after a median of 1.56 million steps on that map (it matches within 3 million steps on 15 of 20 maps). The honest limits: the linear learner stops improving at about 40% regret, so its features limit it rather than its samples; no learner reached 5% on most runs within 3 million steps; and the step sizes were tuned lightly on a small grid, with the best Q-learning and linear values at the edge of it. Reproduce with `uv run python -m experiments.e4`; see [docs/learning.md](docs/learning.md).
+A linear learner with ten map-only features, trained across 20 other maps, ends with about the same median regret on a new map as Q-learning after 3 million steps on that map. Matching the per-map mean regret, Q-learning needs a median of 1.56 million steps (it gets there within 3 million on 15 of 20 maps). The honest limits: the spread is wide (quartiles 8.7% to 48.2%) and a few maps are far from optimal; the linear learner's features, not its samples, limit it (training on the map itself does not beat zero-shot); no learner reached the 5% threshold in most runs; and the step sizes were tuned lightly on a small grid, with the best values at the edge of it. Reproduce with `uv run python -m experiments.e4`; see [docs/learning.md](docs/learning.md).
 
 ### What prior knowledge buys back (E1)
 
-E1: eight ways to learn the ten 30 x 30 `dilemma` maps (5 seeds each, 1,000,000 steps, same budget and seeds for all), scored exactly by the oracle. Regret is a fraction of the optimal cost; "learned" means at most 5%.
+E1: eight ways to learn the ten 30 x 30 `dilemma` maps (5 seeds each, 1,000,000 steps, same budget and seeds for all), scored exactly by the oracle. Regret is a fraction of the optimal cost (median and quartiles, with the mean in brackets because a few looping policies inflate it); "learned" means at most 5%.
 
-| Configuration | Rovers lost while learning | Final regret | Learned | Median steps to learn |
+| Configuration | Rovers lost while learning | Final regret: median [quartiles] (mean) | Runs that loop | Learned |
 |---|---|---|---|---|
-| Q | 1,252 ± 104 | 56.1% ± 50.6 | 12% | not reached |
-| SARSA | 168 ± 28 | 11.0% ± 3.3 | 72% | 600,000 |
-| Q + shaping | 2,815 ± 250 | 56.6% ± 46.7 | 24% | not reached |
-| Q + shield | 239 ± 17 | 41.8% ± 39.4 | 14% | not reached |
-| Q + shield + shaping | 764 ± 70 | 88.9% ± 81.8 | 28% | not reached |
-| MB-count (no map knowledge) | 270 ± 26 | 1.3% ± 0.2 | 100% | 120,000 |
-| MB-struct (knows the geometry) | 17 ± 2 | 0.0% ± 0.1 | 100% | 40,000 |
-| MB-struct + constrained planning | 1 ± 0 | 0.0% ± 0.1 | 100% | 40,000 |
+| Q | 1,252 ± 104 | 12.0% [8.0 to 24.0] (mean 56%) | 3 of 50 | 12% |
+| SARSA | 168 ± 28 | 6.7% [5.5 to 9.8] (mean 11%) | 0 of 50 | 72% |
+| Q + shaping | 2,815 ± 250 | 12.3% [9.4 to 30.9] (mean 57%) | 3 of 50 | 24% |
+| Q + shield | 239 ± 17 | 12.0% [8.9 to 32.9] (mean 42%) | 1 of 50 | 14% |
+| Q + shield + shaping | 764 ± 70 | 12.9% [9.2 to 42.0] (mean 89%) | 3 of 50 | 28% |
+| MB-count (no map knowledge) | 270 ± 26 | 1.3% [0.9 to 1.6] (mean 1%) | 0 of 50 | 100% |
+| MB-struct (knows the geometry) | 17 ± 2 | 0.0% [0.0 to 0.0] (mean 0%) | 0 of 50 | 100% |
+| MB-struct + constrained planning | 1 ± 0 | 0.0% [0.0 to 0.0] (mean 0%) | 0 of 50 | 100% |
 
 ![Pareto](results/figures/e1_pareto.png)
 
@@ -144,9 +144,9 @@ E1: eight ways to learn the ten 30 x 30 `dilemma` maps (5 seeds each, 1,000,000 
 What the numbers say, including the parts that did not go as planned:
 
 - Knowing the map's geometry and learning only the hidden slip probabilities and costs loses 98.7% fewer rovers than Q-learning (17 against 1,252) and learns in 40,000 steps; planning under a failure-probability bound loses one on average. A model-based learner that knows nothing of the map (MB-count) already beats every model-free variant on both axes, so most of the gain comes from planning on a learned model, and the map adds a further 16x fewer rovers lost.
-- The shield works as intended on its own: Q + shield loses 5x fewer rovers than Q (239 against 1,252). It bounds the risk of each step, not the probability of failing over an episode.
-- Shaping did **not** help here. Q + shaping lost more rovers than Q (2,815 against 1,252) and reached the same final regret, and the shaping scale chosen by tuning (2.0) sat at the edge of the grid. I have not isolated why; one candidate is that the potential pulls the learner along the shortest route, which on a dilemma map is the risky corridor. Shaping preserves the optimal policy (checked against the oracle) but not the safety of the learning process.
-- SARSA is the best model-free learner on these maps, but see E1b below: that does not carry over to the ridge maps.
+- The shield works as intended on its own: Q + shield loses 5x fewer rovers than Q (239 against 1,252) at the same median regret. It bounds the risk of each step, not the probability of failing over an episode.
+- Shaping did **not** help here. Q + shaping lost more rovers than Q (2,815 against 1,252) at the same median regret, and the shaping scale chosen by tuning (2.0) sat at the edge of the grid. I have not isolated why. Shaping preserves the optimal policy (checked against the oracle) but not the safety of the learning process.
+- SARSA is the best model-free learner on these maps, but see E1b: that does not carry over to the ridge maps.
 - On these maps the optimum already avoids the corridor, so the shield costs little in regret here; E1b tests maps where the best policy accepts some risk.
 
 Reproduce with `uv run python -m experiments.e1`; see [docs/learning.md](docs/learning.md).
@@ -157,20 +157,22 @@ E1 compared the shield only with Q-learning, on maps where the safe route is alr
 
 ![Ablation](results/figures/e1b_ablation.png)
 
-| Rovers lost while learning (final regret) | dilemma (10 maps) | ridge (12 maps) |
-|---|---|---|
-| Q | 1,252 (56%) | 7,245 (29%) |
-| SARSA | 168 (11%) | 4,507 (**438%**) |
-| SARSA + shield | 68 (27% ± 32) | **0** (8.3%) |
-| SARSA + shaping | 269 (21%) | 4,878 (471%) |
-| Q + shield | 239 (42%) | **0** (15%) |
-| Model-based + constrained planning | 1 (0.0%) | 121 (2.7%, P(fail) 1.0%) |
+Rovers lost while learning; final regret as median [quartiles]; runs whose final policy loops:
 
-- **The shield does help, and E1 understated it.** On ridge maps SARSA loses thousands of rovers and ends far from optimal (regret 438%; I have not looked into why its greedy policy is that poor), while SARSA + shield loses none and ends 8% from optimal. On dilemma maps it cuts SARSA's losses 2.5x (168 to 68) with regret that is statistically indistinguishable (the intervals overlap widely). The slip sweep agrees: at slip 0.05, 113 to 10 rovers lost; at 0.3, 216 to 154.
-- **Caution has a price where the optimum takes risk.** On ridge maps the optimal policy fails 3% of the time; the shielded learners fail 0% and sit 8 to 15% above the optimal cost. The constrained planner, given a 1% bound, lands at 1.0% and 2.7% above, which is the better trade, at the cost of knowing the geometry.
+| Configuration | dilemma (10 maps) | ridge (12 maps) |
+|---|---|---|
+| Q | 1,252; 12.0% [8.0 to 24.0]; 3 of 50 | 7,245; 16.0% [13.3 to 22.4]; 1 of 36 |
+| SARSA | 168; 6.7% [5.5 to 9.8]; 0 of 50 | 4,507; 20.2% [10.5 to 322]; **9 of 36** |
+| SARSA + shield | 68; 6.7% [5.2 to 8.9]; 1 of 50 | **0**; 7.4% [5.3 to 10.3]; 0 of 36 |
+| SARSA + shaping | 269; 11.5% [8.7 to 18.1]; 0 of 50 | 4,878; 18.1% [11.0 to 172]; 9 of 36 |
+| Q + shield | 239; 12.0% [8.9 to 32.9]; 1 of 50 | **0**; 14.2% [11.9 to 17.8]; 0 of 36 |
+| Model-based + constrained planning | 1; 0.0%; 0 of 50 | 121; 2.6% [1.8 to 3.1]; 0 of 36 |
+
+- **The shield does help, and E1 understated it.** On ridge maps SARSA loses thousands of rovers and in a quarter of the runs (9 of 36) ends with a policy that loops until the horizon, which is what makes its mean regret 438% while its median is 20%. SARSA + shield loses no rovers, never loops, and has a median regret of 7%. On dilemma maps it cuts SARSA's losses 2.5x (168 to 68) at the same median regret. The slip sweep agrees: at slip 0.05, 113 to 10 rovers lost; at 0.3, 216 to 154.
+- **Caution has a price where the optimum takes risk.** On ridge maps the optimal policy fails 3% of the time; the shielded learners fail 0%, and their median regret (7 to 14%) includes that price. The constrained planner, given a 1% bound, lands at 1.0% failure and 2.6% regret, which is the better trade, at the cost of knowing the geometry.
 - **SARSA is not safe by itself.** It looked safe on the dilemma maps because the best route there is the safe one.
-- **Shaping did not help in any setting** (dilemma: worse regret for SARSA; ridge: no change). The tuned scale is again at the edge of the grid. The tuning objective (mean regret over the whole run) rewards early speed, so a candidate explanation is that it picked a scale that is fast early and worse at the end; I have not tested that, so shaping stays in the repository as an honest negative result rather than as a claimed benefit.
-- **A wrong assumed bound is visible.** At true slip 0.3 a dash slips with probability 0.6, above the 0.4 the shield and the planner assume, and the constrained planner's regret rises to 37% (its failure probability stays 0%).
+- **Shaping did not help in any setting** (dilemma: higher median regret for SARSA; ridge: no change). The tuned scale is again at the edge of the grid. The tuning objective (mean regret over the whole run) rewards early speed, so a candidate explanation is that it picked a scale that is fast early and worse at the end; I have not tested that, so shaping stays in the repository as an honest negative result rather than as a claimed benefit.
+- **A wrong assumed bound is visible.** At true slip 0.3 a dash slips with probability 0.6, above the 0.4 the shield and the planner assume, and the constrained planner's median regret rises to 35% (its failure probability stays 0%).
 
 Reproduce with `uv run python -m experiments.e1b`.
 

@@ -29,6 +29,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
 SRC = "src/riskladder/"
+QUIET = ("--no-header",)
+TIMEOUT_SECONDS = 600  # the suite takes about a minute; ten means the mutant loops forever
 
 
 @dataclass(frozen=True)
@@ -44,20 +46,20 @@ MUTANTS = [
     # --- dynamics and costs
     Mutant(
         "env/dynamics.py",
-        "extra[blocked] += costs.collision",
-        "extra[blocked] += 0.0",
+        "walk.collided * costs.collision",
+        "walk.collided * 0.0",
         "collision cost dropped",
     ),
     Mutant(
         "env/dynamics.py",
-        "extra[active & (tile == C_ROUGH)] += costs.rough_extra",
-        "extra[tile == C_ROUGH] += costs.rough_extra",
+        "rough += active & (tile == C_ROUGH)",
+        "rough += tile == C_ROUGH",
         "rough cost charged although the rover had already stopped",
     ),
     Mutant(
         "env/dynamics.py",
-        "extra[hazard] += spec.c_fail",
-        "extra[hazard] += 0.0",
+        "(walk.status == FAIL) * spec.c_fail",
+        "(walk.status == FAIL) * 0.0",
         "failure cost dropped",
     ),
     Mutant(
@@ -259,6 +261,121 @@ MUTANTS = [
         "np.any(weights < -1)",
         "negative mixture weights accepted",
     ),
+    # --- learners, harness, priors (Phases 4 and 5)
+    Mutant(
+        "agents/tabular.py",
+        "target = cost if terminated else cost + self._best(next_cell)",
+        "target = cost + self._best(next_cell)",
+        "a terminal step bootstraps from the next cell",
+    ),
+    Mutant(
+        "agents/tabular.py",
+        "self._next = None if truncated else following",
+        "self._next = following",
+        "SARSA keeps a pending action after a horizon cut",
+    ),
+    Mutant(
+        "agents/tabular.py",
+        "step = self.alpha / (1.0 + self.alpha_decay * self.visits[key])",
+        "step = self.alpha",
+        "the step size ignores the visit count",
+    ),
+    Mutant(
+        "agents/tabular.py",
+        "frac = min(1.0, self.t / self._ramp)",
+        "frac = self.t / self._ramp",
+        "exploration keeps falling below its floor",
+    ),
+    Mutant(
+        "agents/linear.py",
+        "target = cost + max(floor, float(q_next.min()))",
+        "target = cost + float(q_next.min())",
+        "the bootstrap is not clamped",
+    ),
+    Mutant(
+        "agents/priors.py",
+        "return values if allowed is None else np.where(allowed, values, np.inf)",
+        "return values if allowed is None else np.where(allowed, values, -np.inf)",
+        "blocked actions look best",
+    ),
+    Mutant(
+        "harness/train.py",
+        "failures += result.status == FAIL",
+        "failures += result.status == SUCCESS",
+        "successes are counted as failures",
+    ),
+    Mutant(
+        "harness/train.py",
+        "if steps % every == 0 or steps == budget_steps:",
+        "if steps % every == 0:",
+        "the last checkpoint is skipped",
+    ),
+    Mutant(
+        "harness/scoring.py",
+        "return self.tau * self.optimal.cost",
+        "return self.tau",
+        "the learned threshold ignores the optimal cost",
+    ),
+    Mutant(
+        "safety/shield.py",
+        "risk = (1.0 - p_max) * fail[..., 0] + 0.5 * p_max * fail[..., 1:].sum(axis=-1)",
+        "risk = 1.0 * fail[..., 0] + 0.5 * p_max * fail[..., 1:].sum(axis=-1)",
+        "intended hazard risk ignores slipping",
+    ),
+    Mutant(
+        "safety/shield.py",
+        "risk = (1.0 - p_max) * fail[..., 0] + 0.5 * p_max * fail[..., 1:].sum(axis=-1)",
+        "risk = (1.0 - p_max) * fail[..., 0] + p_max * fail[..., 1:].sum(axis=-1)",
+        "a slip side gets the whole slip probability",
+    ),
+    Mutant(
+        "safety/shield.py",
+        "ok = risk[r, c] <= bar + _EPS",
+        "ok = risk[r, c] <= self.theta + _EPS",
+        "cells that need a risky route lose it",
+    ),
+    Mutant(
+        "safety/shield.py",
+        "ok[a] = route[lr, lc] <= bar + _EPS",
+        "pass",
+        "landing in a dead end is allowed",
+    ),
+    Mutant(
+        "safety/shaping.py",
+        "after = 0.0 if terminated else float(potential[next_cell])",
+        "after = float(potential[next_cell])",
+        "the potential of an absorbing outcome is not zero",
+    ),
+    Mutant(
+        "agents/model_based.py",
+        "known = self.visits >= self.known_after",
+        "known = self.visits > self.known_after",
+        "an action counts as known one visit late",
+    ),
+    Mutant(
+        "agents/model_based.py",
+        "weight = match * np.array([1.0 - p, p / 2, p / 2])",
+        "weight = match * np.array([1.0, p / 2, p / 2])",
+        "the intended branch is always preferred",
+    ),
+    Mutant(
+        "agents/model_based.py",
+        "centre = p + z * z / (2 * trials)",
+        "centre = p - z * z / (2 * trials)",
+        "the confidence bound is not an upper bound",
+    ),
+    Mutant(
+        "agents/model_based.py",
+        "return max(self.mixture(layout, cells), key=lambda part: part[0])[1]",
+        "return min(self.mixture(layout, cells), key=lambda part: part[0])[1]",
+        "greedy reports the lightest part of the mixture",
+    ),
+    Mutant(
+        "agents/features.py",
+        "phi[..., 3] = b.status[intended] == FAIL",
+        "phi[..., 3] = 0.0",
+        "the hazard flag is always off",
+    ),
 ]
 
 
@@ -280,10 +397,13 @@ def run_one(index: int, mutant: Mutant) -> tuple[int, str, str]:
             )
         target.write_text(text.replace(mutant.old, mutant.new))
         env = dict(os.environ, PYTHONPATH=os.pathsep.join([str(work / "src"), str(work)]), CI="1")
-        run = subprocess.run(
-            [sys.executable, "-m", "pytest", "-x", "-q", "-p", "no:cacheprovider", "--no-header"],
-            cwd=work, env=env, capture_output=True, text=True,
-        )  # fmt: skip
+        try:
+            run = subprocess.run(
+                [sys.executable, "-m", "pytest", "-x", "-q", "-p", "no:cacheprovider", *QUIET],
+                cwd=work, env=env, capture_output=True, text=True, timeout=TIMEOUT_SECONDS,
+            )  # fmt: skip
+        except subprocess.TimeoutExpired:  # a mutant that loops forever is noticed by the clock
+            return index, "KILLED", "timeout (the mutant never finishes)"
         if run.returncode == 0:
             return index, "SURVIVED", ""
         first = next((ln for ln in run.stdout.splitlines() if ln.startswith("FAILED")), "error")

@@ -25,17 +25,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
-from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
 
 from experiments import e4
 from experiments import plotting as style
+from experiments.common import final_summary, relative, run_specs
 from riskladder.env import generate, save_map
-from riskladder.harness import RunSpec, summarize
-from riskladder.harness.runner import mean_ci, write_jsonl
+from riskladder.harness import RunSpec
+from riskladder.harness.runner import write_jsonl
 
 ROOT = Path(__file__).parents[1]
 RESULTS = ROOT / "results"
@@ -70,10 +69,6 @@ def load_scale() -> float:
     return json.loads(CONFIG.read_text())["shaping"] if CONFIG.exists() else 1.0
 
 
-def _pool_size() -> int:
-    return max(1, min(10, (os.cpu_count() or 2) - 1))
-
-
 def tune(budget: int, scratch: Path) -> dict:
     """Pick the shaping scale with the smallest mean regret over the run on the tuning maps."""
     paths = []
@@ -89,8 +84,7 @@ def tune(budget: int, scratch: Path) -> dict:
         for scale in SHAPING_GRID
         for p in paths
     ]
-    with ProcessPoolExecutor(_pool_size()) as pool:
-        records = list(pool.map(e4._run_one, specs, chunksize=1))
+    records = run_specs(specs)
     scores = []
     for i in range(len(SHAPING_GRID)):
         part = records[i * len(paths) : (i + 1) * len(paths)]
@@ -121,32 +115,16 @@ def compare(maps: list[Path], seeds: int, budget: int, scale: float, raw: Path |
         for m in maps
         for seed in range(seeds)
     ]
-    with ProcessPoolExecutor(_pool_size()) as pool:  # results come back in submission order
-        records = list(pool.map(e4._run_one, [spec for _, spec in jobs], chunksize=1))
+    records = run_specs([spec for _, spec in jobs])  # in the order of the jobs
     labelled = [(label, record) for (label, _), record in zip(jobs, records, strict=True)]
     if raw is not None:
         write_jsonl(
             raw / "e1_runs.jsonl", [{"label": label, **record} for label, record in labelled]
         )
-    out = {}
-    for label in named:
-        mine = [e4._relative(r) for name, r in labelled if name == label]
-        summary = summarize(mine)
-        last = [r["checkpoints"][-1] for r in mine]
-        out[label] = {
-            "summary": summary,
-            "train_failures": _stat(np.array([c["train_failures"] for c in last], dtype=float)),
-            "regret": _stat(np.array([c["regret"] for c in last])),
-            "p_fail": _stat(np.array([c["p_fail"] for c in last])),
-            "learned_fraction": summary["learned_fraction"],
-            "learned_median": summary["learned_median"],
-        }
-    return out
-
-
-def _stat(values: np.ndarray) -> dict:
-    mean, half = mean_ci(values)
-    return {"mean": float(mean), "ci95": float(half)}
+    return {
+        label: final_summary([relative(r, TAU) for name, r in labelled if name == label])
+        for label in named
+    }
 
 
 def run_all(quick: bool = False, raw: Path | None = None) -> dict:
@@ -202,7 +180,7 @@ def plot_curves(result: dict, path: Path) -> None:
     with style.context():
         fig, ax = plt.subplots(figsize=(7.4, 4.2))
         for label in MAIN:
-            s = result["configs"][label]["summary"]
+            s = result["configs"][label]["curves"]
             x = np.array(s["steps"][1:]) / 1e3
             y = 100 * np.array(s["regret"]["mean"][1:])
             ax.plot(x, y, color=FAMILY[label], linewidth=2, linestyle="-" if "+" not in label
@@ -220,25 +198,38 @@ def plot_curves(result: dict, path: Path) -> None:
         plt.close(fig)
 
 
+def row(label: str, c: dict) -> str:
+    """One table row: the median and quartiles of final regret, with the mean for comparison."""
+    f, r, p = c["train_failures"], c["regret"], c["p_fail"]
+    median = c["learned_median"]
+    return (
+        f"| {label} | {f['mean']:,.0f} ± {np.nan_to_num(f['ci95']):,.0f} | "
+        f"{100 * r['median']:.1f}% [{100 * r['q1']:.1f} to {100 * r['q3']:.1f}] "
+        f"(mean {100 * r['mean']:.0f}%) | {c['looping_runs']} of {c['runs']} | "
+        f"{100 * p['mean']:.1f}% | {100 * c['learned_fraction']:.0f}% | "
+        f"{'not reached' if median is None else f'{median:,.0f}'} |"
+    )
+
+
+TABLE_HEADER = [
+    "| Configuration | Rovers lost while learning | Final regret: median [quartiles] (mean) |"
+    " Runs that loop | Final P(fail) | Learned | Median steps to learn |",
+    "|---|---|---|---|---|---|---|",
+]
+
+
 def to_markdown(result: dict) -> str:
     lines = [
         "E1: the cost of learning and what prior knowledge buys back.\n",
         f"{result['maps']} dilemma maps x {result['seeds_per_map']} seeds, "
         f"{result['budget']:,} steps each; regret is exact and relative to the optimal cost. "
-        "'Learned' means regret at most 5%. Intervals are 95% across runs.\n",
-        "| Configuration | Rovers lost while learning | Final regret | Final P(fail) | Learned |"
-        " Median steps to learn |",
-        "|---|---|---|---|---|---|",
+        "'Learned' means regret at most 5%. A run 'loops' when its final policy times out with "
+        "probability above 0.5%. Regret is heavy-tailed (a looping policy pays until the horizon), "
+        "so the median and quartiles are shown next to the mean. Rovers lost: mean and 95% "
+        "interval across runs.\n",
+        *TABLE_HEADER,
+        *(row(label, c) for label, c in result["configs"].items()),
     ]
-    for label, c in result["configs"].items():
-        f, r, p = c["train_failures"], c["regret"], c["p_fail"]
-        median = c["learned_median"]
-        lines.append(
-            f"| {label} | {f['mean']:,.0f} ± {np.nan_to_num(f['ci95']):,.0f} | "
-            f"{100 * r['mean']:.1f}% ± {100 * np.nan_to_num(r['ci95']):.1f} | "
-            f"{100 * p['mean']:.1f}% | {100 * c['learned_fraction']:.0f}% | "
-            f"{'not reached' if median is None else f'{median:,.0f}'} |"
-        )
     cfg = result["configs"]
     base = cfg["Q"]["train_failures"]["mean"]
     lines.append("")

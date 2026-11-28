@@ -22,16 +22,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
 
 from experiments import plotting as style
+from experiments.common import LOOP, final_summary, pool_size, relative, run_one, stat
 from riskladder.agents.linear import LinearQ
 from riskladder.env import RoverEnv, load_map
-from riskladder.harness import RunSpec, Scorer, run, summarize, train
+from riskladder.harness import RunSpec, Scorer, summarize, train
 from riskladder.harness.runner import mean_ci, write_jsonl
 
 ROOT = Path(__file__).parents[1]
@@ -57,21 +57,6 @@ SCALE = {  # (steps per tabular run, steps training the linear learner across ma
 
 def load_config() -> dict:
     return json.loads(CONFIG.read_text()) if CONFIG.exists() else {a: {} for a in AGENTS}
-
-
-def _pool_size() -> int:
-    return max(1, min(10, (os.cpu_count() or 2) - 1))
-
-
-def _run_one(spec: RunSpec) -> dict:
-    return run(spec)
-
-
-def _relative(record: dict) -> dict:
-    """The same record with regret as a fraction of the optimal cost (comparable across maps)."""
-    scale = record["optimal_cost"]
-    rows = [{**row, "regret": row["regret"] / scale} for row in record["checkpoints"]]
-    return {**record, "checkpoints": rows, "threshold": TAU, "learned_at": record["learned_at"]}
 
 
 def _train_linear_across_maps(job: tuple[int, dict, int, list[str], list[str]]) -> dict:
@@ -109,7 +94,7 @@ def tune(quick: bool = False) -> dict:
     tabular_budget, linear_budget = SCALE["quick" if quick else "full"]
     tune_maps = [str(p) for p in TRAIN_MAPS[: 2 if quick else 5]]
     chosen: dict = {"tuned_on": "field/train", "scores": {}}
-    with ProcessPoolExecutor(_pool_size()) as pool:
+    with ProcessPoolExecutor(pool_size()) as pool:
         for agent in ("q", "sarsa"):
             grid = GRID[agent][:2] if quick else GRID[agent]
             specs = [
@@ -117,7 +102,7 @@ def tune(quick: bool = False) -> dict:
                 for config in grid
                 for m in tune_maps
             ]
-            records = list(pool.map(_run_one, specs, chunksize=1))
+            records = list(pool.map(run_one, specs, chunksize=1))
             scores = []
             for i in range(len(grid)):
                 part = records[i * len(tune_maps) : (i + 1) * len(tune_maps)]
@@ -154,14 +139,15 @@ def curves(config: dict, maps: list[Path], seeds: int, budget: int, raw: Path | 
         for m in maps
         for seed in range(seeds)
     ]
-    with ProcessPoolExecutor(_pool_size()) as pool:
-        records = list(pool.map(_run_one, specs, chunksize=1))
+    with ProcessPoolExecutor(pool_size()) as pool:
+        records = list(pool.map(run_one, specs, chunksize=1))
     if raw is not None:
         write_jsonl(raw, records)
     out = {}
     for agent in AGENTS:
-        mine = [_relative(r) for r in records if r["agent"] == agent]
+        mine = [relative(r, TAU) for r in records if r["agent"] == agent]
         summary = summarize(mine)
+        summary["final"] = {k: v for k, v in final_summary(mine).items() if k != "curves"}
         summary["per_map_final_regret"] = {
             m.stem: float(
                 np.mean([r["checkpoints"][-1]["regret"] for r in mine if r["map"] == m.stem])
@@ -188,7 +174,7 @@ def generalisation(
          [str(p) for p in test_maps])
         for seed in range(seeds)
     ]  # fmt: skip
-    with ProcessPoolExecutor(_pool_size()) as pool:
+    with ProcessPoolExecutor(pool_size()) as pool:
         records = list(pool.map(_train_linear_across_maps, jobs, chunksize=1))
     if raw is not None:
         write_jsonl(raw, records)
@@ -203,6 +189,11 @@ def generalisation(
         "final_regret_per_map": regret[:, -1, :].mean(axis=0).tolist(),
         "final_p_fail_per_map": p_fail[:, -1, :].mean(axis=0).tolist(),
         "final_p_timeout_per_map": timeout[:, -1, :].mean(axis=0).tolist(),
+        "final": {
+            "regret": stat(regret[:, -1, :].ravel()),
+            "looping_runs": int((timeout[:, -1, :] > LOOP).sum()),
+            "runs": int(regret[:, -1, :].size),
+        },
     }  # fmt: skip
 
 
@@ -316,23 +307,28 @@ def to_markdown(result: dict) -> str:
     lines = [
         "E4: learning from samples; regret is exact (oracle) and relative to the optimal cost.\n",
         f"Each agent learns each of {len(g['maps'])} held-out maps from scratch "
-        f"({result['seeds_per_map']} seeds per map, {s['q']['steps'][-1]:,} steps). 95% intervals "
-        "are across all runs. 'Learned' means regret at most 5% of the optimum.\n",
-        "| Agent | Regret at the end | P(fail) at the end | Learned | Median steps to learn |"
-        " Failures while training |",
-        "|---|---|---|---|---|---|",
+        f"({result['seeds_per_map']} seeds per map, {s['q']['steps'][-1]:,} steps). Regret is "
+        "heavy-tailed (a policy that loops pays until the horizon), so the median and quartiles "
+        "are shown next to the mean. A run 'loops' when its final policy times out with "
+        "probability above 0.5%. 'Learned' means regret at most 5% of the optimum.\n",
+        "| Agent | Regret at the end: median [quartiles] (mean) | Runs that loop | P(fail) |"
+        " Learned | Median steps to learn | Failures while training |",
+        "|---|---|---|---|---|---|---|",
     ]
     for agent in AGENTS:
         a = s[agent]
-        r, ci = a["regret"]["mean"][-1], a["regret"]["ci95"][-1]
+        f = a["final"]
+        r = f["regret"]
         median = a["learned_median"]
         lines.append(
-            f"| {LABELS[agent]} | {100 * r:.1f}% ± {100 * ci:.1f} | "
-            f"{100 * a['p_fail']['mean'][-1]:.1f}% | {100 * a['learned_fraction']:.0f}% of runs | "
+            f"| {LABELS[agent]} | {100 * r['median']:.1f}% "
+            f"[{100 * r['q1']:.1f} to {100 * r['q3']:.1f}] "
+            f"(mean {100 * r['mean']:.0f}%) | {f['looping_runs']} of {f['runs']} | "
+            f"{100 * f['p_fail']['mean']:.1f}% | {100 * a['learned_fraction']:.0f}% | "
             f"{'not reached' if median is None else f'{median:,.0f}'} | "
-            f"{a['train_failures']['mean'][-1]:,.0f} |"
+            f"{f['train_failures']['mean']:,.0f} |"
         )
-    final, ci = g["regret_mean"][-1], g["regret_ci95"][-1]
+    r = g["final"]["regret"]
     median_text = (
         "not reached on at least half of the maps"
         if m["median_steps"] is None
@@ -341,8 +337,9 @@ def to_markdown(result: dict) -> str:
     lines += [
         f"\nGeneralisation. A linear learner trained for {g['train_steps']:,} steps across the 20 "
         f"training maps ({g['seeds']} seeds), then scored with no further samples on the held-out "
-        f"maps: regret {100 * final:.1f}% ± {100 * ci:.1f}, P(fail) "
-        f"{100 * float(np.mean(g['final_p_fail_per_map'])):.1f}%.\n",
+        f"maps: regret {100 * r['median']:.1f}% [{100 * r['q1']:.1f} to {100 * r['q3']:.1f}] "
+        f"(mean {100 * r['mean']:.0f}%), {g['final']['looping_runs']} of {g['final']['runs']} "
+        f"policies loop, P(fail) {100 * float(np.mean(g['final_p_fail_per_map'])):.1f}%.\n",
         f"Q-learning matches that per-map regret within {m['budget']:,} steps on "
         f"{m['matched_maps']} of {m['maps']} maps; median steps to match: "
         f"{median_text}.",

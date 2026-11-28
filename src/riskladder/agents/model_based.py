@@ -30,7 +30,7 @@ from scipy import sparse
 
 from riskladder.agents.cmdp import solve_cmdp
 from riskladder.env import Costs, MapSpec, Noise, build_model
-from riskladder.env.dynamics import ACTIONS, FAIL, N_ACTIONS, PERPENDICULAR, RUNNING, walk_many
+from riskladder.env.dynamics import ACTIONS, FAIL, N_ACTIONS, RUNNING, branch_table
 from riskladder.env.layout import Layout
 from riskladder.oracle.solve import value_iteration
 
@@ -222,38 +222,6 @@ class MBCount(_ModelBased):
         return [(1.0, solution.policy.reshape(self.rows, self.cols))]
 
 
-@dataclass(frozen=True)
-class _Branches:
-    """Where each (cell, action, branch) leads, from the layout alone. Branch 0 is the intended
-    direction, 1 and 2 the sideways slips (the same order as the exact model)."""
-
-    row: np.ndarray
-    col: np.ndarray
-    ended: np.ndarray  # the branch ends the episode (goal or hazard)
-    features: np.ndarray  # (..., 3): rough tiles crossed, bumped into a rock, entered a hazard
-
-
-def _branches(layout: Layout) -> _Branches:
-    rows, cols = layout.rows, layout.cols
-    r, c = (v.ravel() for v in np.indices((rows, cols)))
-    shape = (rows * cols, N_ACTIONS, 3)
-    row, col = np.zeros(shape, dtype=np.int64), np.zeros(shape, dtype=np.int64)
-    ended = np.zeros(shape, dtype=bool)
-    features = np.zeros((*shape, 3))
-    for a, action in enumerate(ACTIONS):
-        sides = (action.direction, *PERPENDICULAR[action.direction])
-        for b, direction in enumerate(sides):
-            walk = walk_many(layout, r, c, direction, action.cells)
-            row[:, a, b], col[:, a, b] = walk.rows, walk.cols
-            ended[:, a, b] = walk.status != RUNNING
-            features[:, a, b] = np.column_stack([walk.rough, walk.collided, walk.status == FAIL])
-    unflatten = (rows, cols, N_ACTIONS, 3)
-    return _Branches(
-        row.reshape(unflatten), col.reshape(unflatten), ended.reshape(unflatten),
-        features.reshape(*unflatten, 3),
-    )  # fmt: skip
-
-
 def _wilson_upper(slips: float, trials: float, z: float) -> float:
     if trials <= 0:
         return 1.0
@@ -291,7 +259,7 @@ class MBStruct(_ModelBased):
         self.name = "mb_struct_cmdp" if cmdp else "mb_struct"
 
     def _setup(self, layout: Layout) -> None:
-        self.branch = _branches(layout)
+        self.branch = branch_table(layout)
         self.trials = np.zeros(2)  # moves, dashes
         self.slips = np.zeros(2)
         self.gram = np.zeros((5, 5))  # normal equations for the cost parameters
@@ -318,9 +286,9 @@ class MBStruct(_ModelBased):
         r, c = cell
         b = self.branch
         match = (
-            (b.row[r, c, action] == next_cell[0])
-            & (b.col[r, c, action] == next_cell[1])
-            & (b.ended[r, c, action] == terminated)
+            (b.rows[r, c, action] == next_cell[0])
+            & (b.cols[r, c, action] == next_cell[1])
+            & ((b.status[r, c, action] != RUNNING) == terminated)
         )
         if not match.any():
             return
@@ -332,7 +300,11 @@ class MBStruct(_ModelBased):
         self.slips[kind] += weight[1] + weight[2]
         design = np.zeros(5)  # branches that cannot be told apart share the observation
         design[kind] = 1.0
-        design[2:] = weight @ b.features[r, c, action]
+        branch_features = np.stack(
+            [b.rough[r, c, action], b.collided[r, c, action], b.status[r, c, action] == FAIL],
+            axis=1,
+        )
+        design[2:] = weight @ branch_features
         self.gram += np.outer(design, design)
         self.moment += design * cost
 

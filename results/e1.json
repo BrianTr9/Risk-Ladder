@@ -10,7 +10,33 @@
   "delta": 0.01,
   "configs": {
     "Q": {
-      "summary": {
+      "runs": 50,
+      "train_failures": {
+        "mean": 1252.3,
+        "ci95": 103.84717906206492,
+        "median": 1262.0,
+        "q1": 957.25,
+        "q3": 1529.75
+      },
+      "regret": {
+        "mean": 0.5613005993021853,
+        "ci95": 0.5064770611498712,
+        "median": 0.11950144465418036,
+        "q1": 0.07993987176715259,
+        "q3": 0.2396324198137395
+      },
+      "p_fail": {
+        "mean": 0.0,
+        "ci95": 0.0,
+        "median": 0.0,
+        "q1": 0.0,
+        "q3": 0.0
+      },
+      "looping_runs": 3,
+      "optimal_p_fail": 0.0,
+      "learned_fraction": 0.12,
+      "learned_median": null,
+      "curves": {
         "runs": 50,
         "steps": [
           0,
@@ -332,24 +358,36 @@
         },
         "learned_fraction": 0.12,
         "learned_median": null
-      },
-      "train_failures": {
-        "mean": 1252.3,
-        "ci95": 103.84717906206492
-      },
-      "regret": {
-        "mean": 0.5613005993021853,
-        "ci95": 0.5064770611498712
-      },
-      "p_fail": {
-        "mean": 0.0,
-        "ci95": 0.0
-      },
-      "learned_fraction": 0.12,
-      "learned_median": null
+      }
     },
     "SARSA": {
-      "summary": {
+      "runs": 50,
+      "train_failures": {
+        "mean": 168.46,
+        "ci95": 28.49829414327275,
+        "median": 122.5,
+        "q1": 114.0,
+        "q3": 190.25
+      },
+      "regret": {
+        "mean": 0.10979182416997807,
+        "ci95": 0.03323326601988607,
+        "median": 0.06744049329576157,
+        "q1": 0.05521207538800055,
+        "q3": 0.09798397467463829
+      },
+      "p_fail": {
+        "mean": 0.00034155597722960134,
+        "ci95": 0.0006863824339340852,
+        "median": 0.0,
+        "q1": 0.0,
+        "q3": 0.0
+      },
+      "looping_runs": 0,
+      "optimal_p_fail": 0.0,
+      "learned_fraction": 0.72,
+      "learned_median": 600000.0,
+      "curves": {
         "runs": 50,
         "steps": [
           0,
@@ -671,24 +709,36 @@
         },
         "learned_fraction": 0.72,
         "learned_median": 600000.0
-      },
-      "train_failures": {
-        "mean": 168.46,
-        "ci95": 28.49829414327275
-      },
-      "regret": {
-        "mean": 0.10979182416997807,
-        "ci95": 0.03323326601988607
-      },
-      "p_fail": {
-        "mean": 0.00034155597722960134,
-        "ci95": 0.0006863824339340852
-      },
-      "learned_fraction": 0.72,
-      "learned_median": 600000.0
+      }
     },
     "Q + shaping": {
-      "summary": {
+      "runs": 50,
+      "train_failures": {
+        "mean": 2814.76,
+        "ci95": 249.73308460144884,
+        "median": 2527.0,
+        "q1": 2162.75,
+        "q3": 3456.75
+      },
+      "regret": {
+        "mean": 0.5659330702321339,
+        "ci95": 0.4669401371139628,
+        "median": 0.123222249251738,
+        "q1": 0.09395303907096793,
+        "q3": 0.3088622590657492
+      },
+      "p_fail": {
+        "mean": 0.0,
+        "ci95": 0.0,
+        "median": 0.0,
+        "q1": 0.0,
+        "q3": 0.0
+      },
+      "looping_runs": 3,
+      "optimal_p_fail": 0.0,
+      "learned_fraction": 0.24,
+      "learned_median": null,
+      "curves": {
         "runs": 50,
         "steps": [
           0,
@@ -1010,24 +1060,36 @@
         },
         "learned_fraction": 0.24,
         "learned_median": null
-      },
+      }
+    },
+    "Q + shield": {
+      "runs": 50,
       "train_failures": {
-        "mean": 2814.76,
-        "ci95": 249.73308460144884
+        "mean": 238.86,
+        "ci95": 17.00932316518265,
+        "median": 241.0,
+        "q1": 188.0,
+        "q3": 279.5
       },
       "regret": {
-        "mean": 0.5659330702321339,
-        "ci95": 0.4669401371139628
+        "mean": 0.41828916056627746,
+        "ci95": 0.3936887590656997,
+        "median": 0.1200251163192673,
+        "q1": 0.08869945139779208,
+        "q3": 0.3288452277106432
       },
       "p_fail": {
         "mean": 0.0,
-        "ci95": 0.0
+        "ci95": 0.0,
+        "median": 0.0,
+        "q1": 0.0,
+        "q3": 0.0
       },
-      "learned_fraction": 0.24,
-      "learned_median": null
-    },
-    "Q + shield": {
-      "summary": {
+      "looping_runs": 1,
+      "optimal_p_fail": 0.0,
+      "learned_fraction": 0.14,
+      "learned_median": null,
+      "curves": {
         "runs": 50,
         "steps": [
           0,
@@ -1349,24 +1411,36 @@
         },
         "learned_fraction": 0.14,
         "learned_median": null
-      },
-      "train_failures": {
-        "mean": 238.86,
-        "ci95": 17.00932316518265
-      },
-      "regret": {
-        "mean": 0.41828916056627746,
-        "ci95": 0.3936887590656997
-      },
-      "p_fail": {
-        "mean": 0.0,
-        "ci95": 0.0
-      },
-      "learned_fraction": 0.14,
-      "learned_median": null
+      }
     },
     "Q + shield + shaping": {
-      "summary": {
+      "runs": 50,
+      "train_failures": {
+        "mean": 764.48,
+        "ci95": 69.90783444951076,
+        "median": 733.5,
+        "q1": 615.75,
+        "q3": 853.25
+      },
+      "regret": {
+        "mean": 0.8889247181960535,
+        "ci95": 0.8180098944695575,
+        "median": 0.12859928604657547,
+        "q1": 0.09188332651034979,
+        "q3": 0.41958374860790826
+      },
+      "p_fail": {
+        "mean": 2.5762129666943752e-05,
+        "ci95": 5.17709378344027e-05,
+        "median": 0.0,
+        "q1": 0.0,
+        "q3": 0.0
+      },
+      "looping_runs": 3,
+      "optimal_p_fail": 0.0,
+      "learned_fraction": 0.28,
+      "learned_median": null,
+      "curves": {
         "runs": 50,
         "steps": [
           0,
@@ -1688,24 +1762,36 @@
         },
         "learned_fraction": 0.28,
         "learned_median": null
-      },
-      "train_failures": {
-        "mean": 764.48,
-        "ci95": 69.90783444951076
-      },
-      "regret": {
-        "mean": 0.8889247181960535,
-        "ci95": 0.8180098944695575
-      },
-      "p_fail": {
-        "mean": 2.5762129666943752e-05,
-        "ci95": 5.17709378344027e-05
-      },
-      "learned_fraction": 0.28,
-      "learned_median": null
+      }
     },
     "MB-count": {
-      "summary": {
+      "runs": 50,
+      "train_failures": {
+        "mean": 269.66,
+        "ci95": 26.365062568494064,
+        "median": 253.5,
+        "q1": 197.5,
+        "q3": 321.75
+      },
+      "regret": {
+        "mean": 0.013324588593528398,
+        "ci95": 0.0016427235196428145,
+        "median": 0.012680958707432858,
+        "q1": 0.009450057179351991,
+        "q3": 0.015548986831322737
+      },
+      "p_fail": {
+        "mean": 0.0,
+        "ci95": 0.0,
+        "median": 0.0,
+        "q1": 0.0,
+        "q3": 0.0
+      },
+      "looping_runs": 0,
+      "optimal_p_fail": 0.0,
+      "learned_fraction": 1.0,
+      "learned_median": 120000.0,
+      "curves": {
         "runs": 50,
         "steps": [
           0,
@@ -2027,24 +2113,36 @@
         },
         "learned_fraction": 1.0,
         "learned_median": 120000.0
-      },
+      }
+    },
+    "MB-struct": {
+      "runs": 50,
       "train_failures": {
-        "mean": 269.66,
-        "ci95": 26.365062568494064
+        "mean": 16.58,
+        "ci95": 1.983228838632699,
+        "median": 14.0,
+        "q1": 11.0,
+        "q3": 21.0
       },
       "regret": {
-        "mean": 0.013324588593528398,
-        "ci95": 0.0016427235196428145
+        "mean": 0.0003439482251877972,
+        "ci95": 0.0006896712162313555,
+        "median": 1.2178969835206912e-15,
+        "q1": 0.0,
+        "q3": 1.3866431034199952e-07
       },
       "p_fail": {
         "mean": 0.0,
-        "ci95": 0.0
+        "ci95": 0.0,
+        "median": 0.0,
+        "q1": 0.0,
+        "q3": 0.0
       },
+      "looping_runs": 0,
+      "optimal_p_fail": 0.0,
       "learned_fraction": 1.0,
-      "learned_median": 120000.0
-    },
-    "MB-struct": {
-      "summary": {
+      "learned_median": 40000.0,
+      "curves": {
         "runs": 50,
         "steps": [
           0,
@@ -2366,24 +2464,36 @@
         },
         "learned_fraction": 1.0,
         "learned_median": 40000.0
-      },
+      }
+    },
+    "MB-struct + CMDP": {
+      "runs": 50,
       "train_failures": {
-        "mean": 16.58,
-        "ci95": 1.983228838632699
+        "mean": 1.08,
+        "ci95": 0.07788344219501549,
+        "median": 1.0,
+        "q1": 1.0,
+        "q3": 1.0
       },
       "regret": {
-        "mean": 0.0003439482251877972,
-        "ci95": 0.0006896712162313555
+        "mean": 0.00034786215141007355,
+        "ci95": 0.0006895338797833755,
+        "median": 1.2952797674458799e-11,
+        "q1": 0.0,
+        "q3": 1.953676924012291e-07
       },
       "p_fail": {
         "mean": 0.0,
-        "ci95": 0.0
+        "ci95": 0.0,
+        "median": 0.0,
+        "q1": 0.0,
+        "q3": 0.0
       },
+      "looping_runs": 0,
+      "optimal_p_fail": 0.0,
       "learned_fraction": 1.0,
-      "learned_median": 40000.0
-    },
-    "MB-struct + CMDP": {
-      "summary": {
+      "learned_median": 40000.0,
+      "curves": {
         "runs": 50,
         "steps": [
           0,
@@ -2705,21 +2815,7 @@
         },
         "learned_fraction": 1.0,
         "learned_median": 40000.0
-      },
-      "train_failures": {
-        "mean": 1.08,
-        "ci95": 0.07788344219501549
-      },
-      "regret": {
-        "mean": 0.00034786215141007355,
-        "ci95": 0.0006895338797833755
-      },
-      "p_fail": {
-        "mean": 0.0,
-        "ci95": 0.0
-      },
-      "learned_fraction": 1.0,
-      "learned_median": 40000.0
+      }
     }
   }
 }

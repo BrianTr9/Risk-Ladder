@@ -52,7 +52,7 @@ def test_the_committed_shaping_scale_is_one_of_the_tried_values():
 def test_every_configuration_is_summarised_over_the_same_runs(quick):
     assert set(quick["configs"]) == set(e1.configs(1.0))
     for c in quick["configs"].values():
-        assert c["summary"]["runs"] == quick["maps"] * quick["seeds_per_map"]
+        assert c["runs"] == quick["maps"] * quick["seeds_per_map"]
         assert c["train_failures"]["mean"] >= 0 and 0.0 <= c["p_fail"]["mean"] <= 1.0
 
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 import numpy as np
 
 from riskladder.env.distances import hazard_adjacent, steps_to_goal
-from riskladder.env.dynamics import ACTIONS, FAIL, N_ACTIONS, PERPENDICULAR, RUNNING, walk_many
+from riskladder.env.dynamics import ACTIONS, FAIL, N_ACTIONS, RUNNING, branch_table
 from riskladder.env.layout import NEIGHBOURS, PASSABLE, ROUGH, Layout
 
 FEATURES = (
@@ -61,7 +61,6 @@ def _route_totals(layout: Layout, dist: np.ndarray) -> tuple[np.ndarray, np.ndar
 def feature_table(layout: Layout) -> np.ndarray:
     """`phi[row, col, action, feature]`, scaled to roughly [0, 1.5]; zeros where the rover never
     decides."""
-    rows, cols = layout.rows, layout.cols
     dist = steps_to_goal(layout)
     finite = dist[np.isfinite(dist)]
     scale = max(1.0, float(finite.max()))
@@ -69,29 +68,21 @@ def feature_table(layout: Layout) -> np.ndarray:
     exposure, rough_left = _route_totals(layout, dist)
     exposure, rough_left = exposure / scale, rough_left / scale
 
-    cell_r, cell_c = np.indices((rows, cols))
-    r, c = cell_r.ravel(), cell_c.ravel()
-    phi = np.zeros((rows * cols, N_ACTIONS, N_FEATURES))
-    for a, action in enumerate(ACTIONS):
-        intended = walk_many(layout, r, c, action.direction, action.cells)
-        running = intended.status == RUNNING
-        ir, ic = intended.rows, intended.cols
-        phi[:, a, 0] = 1.0
-        phi[:, a, 1] = np.where(running, h[ir, ic], 0.0)
-        phi[:, a, 2] = float(action.cells == 2)
-        phi[:, a, 3] = intended.status == FAIL
-        phi[:, a, 6] = np.where(running, exposure[ir, ic], 0.0)
-        phi[:, a, 7] = np.where(running, rough_left[ir, ic], 0.0)
-        phi[:, a, 8] = intended.collided
-        phi[:, a, 9] = intended.rough
-        slip_fail = np.zeros(len(r))
-        slip_h = np.zeros(len(r))
-        for side in PERPENDICULAR[action.direction]:
-            slip = walk_many(layout, r, c, side, action.cells)
-            slip_fail += slip.status == FAIL
-            slip_h += np.where(slip.status == RUNNING, h[slip.rows, slip.cols], 0.0)
-        phi[:, a, 4] = slip_fail / 2.0
-        phi[:, a, 5] = slip_h / 2.0
-
-    phi[~layout.mask(PASSABLE).ravel()] = 0.0
-    return phi.reshape(rows, cols, N_ACTIONS, N_FEATURES)
+    b = branch_table(layout)
+    running = b.status == RUNNING
+    h_after = np.where(running, h[b.rows, b.cols], 0.0)  # (rows, cols, A, 3)
+    intended = (..., 0)
+    slips = (..., slice(1, None))
+    phi = np.zeros((layout.rows, layout.cols, N_ACTIONS, N_FEATURES))
+    phi[..., 0] = 1.0
+    phi[..., 1] = h_after[intended]
+    phi[..., 2] = [float(a.cells == 2) for a in ACTIONS]
+    phi[..., 3] = b.status[intended] == FAIL
+    phi[..., 4] = (b.status[slips] == FAIL).mean(axis=-1)
+    phi[..., 5] = h_after[slips].mean(axis=-1)
+    phi[..., 6] = np.where(running[intended], exposure[b.rows[intended], b.cols[intended]], 0.0)
+    phi[..., 7] = np.where(running[intended], rough_left[b.rows[intended], b.cols[intended]], 0.0)
+    phi[..., 8] = b.collided[intended]
+    phi[..., 9] = b.rough[intended]
+    phi[~layout.mask(PASSABLE)] = 0.0
+    return phi
