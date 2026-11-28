@@ -1,0 +1,37 @@
+# What it costs a rover to learn, and what buys the cost back
+
+A rover crosses a hazard map. It knows the map but not exactly how it moves: each step it may slip sideways with some probability, and entering a hazard ends the mission. The question behind RiskLadder is how much it costs such an agent to lack knowledge of its own dynamics, and which kinds of prior knowledge recover that cost. The maps are small enough to solve exactly, so every regret and every failure probability in this write-up is computed in closed form. Apart from tail risk, none of it is estimated from simulated episodes. All numbers come from `results/` and are summarised in `results/SUMMARY.md`.
+
+## Exact evaluation
+
+For a fixed policy, the expected cost and the probability of losing the rover follow from one sparse linear solve over the map's cells, with a finite horizon so that a policy that loops is charged for it. At a failure probability of 0.001 this takes 0.17 ms on a 30 x 30 map. A Monte Carlo estimate accurate to 10% needs 383,776 rollouts and 0.36 s, which is 2,043 times slower, and the gap grows as the risk shrinks because the rollouts needed scale with 1/P(fail). The interval of that estimate covers the truth 96% of the time, so the comparison is fair. Value iteration solves a grid of 960,399 states in 64 s.
+
+Exactness also changed what I reported. Early tables used mean regret, and the means were wrong in a way that only exact evaluation could show: a few final policies loop until the horizon, each pays hundreds of step costs, and one such run outweighs nine good ones. SARSA on the ridge maps had a mean regret of 438% and a median of 20%; 9 of 36 runs looped. Every table now gives the median with quartiles and counts the looping runs.
+
+## A penalty is not a constraint
+
+A planner can turn a risk preference into a price on failure. Solving the problem with an extra failure price is the Lagrangian of the constrained problem, so a price does give a policy on the cost and risk frontier, but only at a corner. As the price rises the failure probability falls in jumps, because finitely many deterministic policies exist. I tuned the price on one ridge map so that the failure probability met a 1% bound there, then used the same price on 12 maps. At a slip of 0.005 it broke the bound on 7 of 12 maps, with a worst case of 1.98%. At a slip of 0.01 it broke it on 3, and at 0.02 on none, where it was instead too cautious and cost 0.33 more than needed.
+
+The constrained solver picks the multiplier for each map and mixes the two deterministic policies on either side of the jump, choosing one of them once per episode with the right probability. A mixture's failure probability is the weighted average of its parts, so the bound is met exactly. It met the bound on all 12 maps at every slip, and the dual bound certifies its cost: the gap was about 1e-10. A check against 30,000 episodes sampled from the environment agreed with the exact numbers within four standard errors.
+
+The guarantee holds for the model the planner believes. A planner that believes the slip is 16 times lower than it is exceeds a 1% bound by 13.7 percentage points on average in the worst case of the grid I tried. Planning with a safety factor of 2 on the believed slip removes the excess for a 2x underestimate and costs 0.75 when the belief was right.
+
+## The cost of not knowing the model
+
+The first rung of the ladder is A*, which plans for a rover that never slips. At a slip of 0.15 the replanned A* policy loses the rover with probability 64% on the ten dilemma maps, and its expected cost is a median 152% above the optimum, which loses it with probability 0.
+
+Learning removes the need to be told the dynamics, and costs rovers. With 1,000,000 steps on each of ten maps and five seeds, Q-learning lost on average 1,252 rovers while learning, and SARSA lost 168. A model-based learner that counts transitions and knows nothing about the map lost 270 and ended within 1.3% of the optimum, so most of the gain over Q-learning comes from planning on a learned model. A learner that knows the map's geometry and estimates only the slip probabilities and the costs lost 17. When it plans with a bound on the failure probability it lost 1, because the plan is safe before the failure cost has been observed.
+
+## Which knowledge buys the cost back
+
+A safety shield blocks actions that could enter a hazard in one step under an assumed bound on the slip. It guarantees nothing about a whole episode, and it keeps at least one action and a route to the goal in every cell by raising its own threshold where no safe route exists. It cut Q-learning's losses about fivefold. It matters more for SARSA than the first experiment suggested. On the ridge maps, where the best policy accepts a 3% risk, SARSA lost 4,507 rovers and looped in a quarter of its runs. With the shield it lost none, never looped, and ended with a median regret of 7%. The price is that the shielded learners fail 0% where the optimum fails 3%.
+
+Reward shaping from the hazard-free distance to the goal preserves the optimal policy, and I checked that against the oracle. It did not help. Q-learning with shaping lost more rovers than without it (2,815 against 1,252) at the same median regret. I chose the shaping scale on separate maps and the best value sat at the edge of my grid. The tuning objective was mean regret over the run, which rewards early speed, so one possible explanation is that it selected a scale that is fast early and no better at the end. I have not tested that.
+
+Features computed from the map transfer to maps the learner has not seen. A linear learner with ten features, trained across 20 maps and then scored with no samples on 20 other maps, ended with a median regret of 18.7% (quartiles 8.7% to 48.2%). Q-learning trained on a single map needed a median of 1.56 million steps to match the same per-map regret, and did not match it within 3 million steps on 5 of the 20 maps. A first feature set that described only the landing cell could not represent the optimal values at all: even a least-squares fit to the optimal Q-values produced policies that cycled. The features that fixed it describe what is left on the shortest route from the landing cell.
+
+## Limits
+
+The environment is a grid with sideways slips and one failure cost. Nothing here involves continuous state, perception or a physical vehicle, and the numbers hold for the generated map families in `experiments/maps/`. The learners are tabular or linear, and deep reinforcement learning is out of scope. The shield assumes an upper bound on the slip that I set to 0.4; at a true slip of 0.3 a dash slips with probability 0.6, the assumption fails, and the constrained planner's median regret rises to 35%. The structured model learner starts with a prior of one cost unit per step, which is knowledge of the cost scale. The step sizes of the tabular learners were tuned on a small grid and the best values lie on its edge. Tail risk is reported as the mean cost of the worst 5% of successful missions, a Monte Carlo estimate with a bootstrap interval, and is the one number in the project that is not exact.
+
+The code has 865 tests, including an independent reference implementation of the dynamics written from the specification, property tests, and a mutation check in which 55 of 55 deliberate bugs are caught. The API answers a constrained plan on a 49-cell map in about 39 ms at the 50th percentile and 42 ms at the 95th, measured in a Docker container.

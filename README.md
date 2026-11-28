@@ -2,36 +2,81 @@
 
 [![ci](https://github.com/BrianTr9/Risk-Ladder/actions/workflows/ci.yml/badge.svg)](https://github.com/BrianTr9/Risk-Ladder/actions/workflows/ci.yml)
 
-**Exact benchmarking of safe planning and learning for autonomous agents under model uncertainty.**
+Exact benchmarking of safe planning and learning for autonomous agents under model uncertainty.
 
-> Status: the environment, exact oracle, planners (A*, penalty, constrained), learners (Q-learning, SARSA, linear, two model-based), safety shield, shaping, the API and the interactive demo are done and measured; the write-up comes next. Every number below comes from `results/` (see [results/SUMMARY.md](results/SUMMARY.md), generated).
+Live demo: https://briantr9-risk-ladder.hf.space (free Space, so the first request after a quiet period can take a minute). Write-up: [docs/writeup.md](docs/writeup.md). Every number below comes from `results/` (see [results/SUMMARY.md](results/SUMMARY.md), generated).
+
+![Rovers lost while learning against final regret](results/figures/e1_pareto.png)
+
+Eight ways to learn the same ten maps. Lower left is better: fewer rovers lost while learning and a smaller final regret.
 
 ## The problem
 
-An autonomous rover knows its map but not exactly how it moves: it may slip, and entering a hazard loses it. Should it plan with a model or learn from experience? How can it learn without being destroyed while learning? And if the model it trusts is wrong, how much does that cost?
+A rover knows its map but not exactly how it moves: it may slip sideways, and entering a hazard loses it. Should it plan with a model or learn from experience? How can it learn without being destroyed while learning? And if the model it trusts is wrong, how much does that cost?
 
-RiskLadder answers these questions with **exact ground truth**. The environment is small enough to solve exactly, so every agent's true regret and true probability of failure are computed in closed form instead of estimated from noisy rollouts.
+The maps are small enough to solve exactly, so every agent's regret and every failure probability are computed in closed form instead of estimated from noisy rollouts.
 
 ## The ladder
 
-Each rung removes one piece of knowledge from the agent.
+Each rung removes one piece of knowledge from the agent. The rungs also mark where the problem gets harder: stochastic transitions (rung 2), no model (rung 3), and a model that must be learned while staying safe (rung 4).
 
 | Rung | What the agent knows | Agents |
 |---|---|---|
 | 1 | Deterministic dynamics, full model | A* |
-| 2 | Stochastic dynamics, full model | Value / policy iteration, constrained MDP (Lagrangian) |
+| 2 | Stochastic dynamics, full model | Value and policy iteration, constrained MDP (Lagrangian) |
 | 3 | Stochastic dynamics, no model | Q-learning, SARSA, linear Q-learning |
 | 4 | Map known, probabilities unknown | Model-based RL, safety shield, reward shaping from the map |
 
 ## Claims
 
-1. **Exact oracle:** expected cost and failure probability of any policy, exactly and faster than Monte Carlo at small risk levels.
-2. **A penalty is not a constraint:** one fixed failure penalty gives very different risk across maps and noise levels; a constrained MDP holds `P(fail) <= delta` on every map at minimum cost. Model misspecification breaks that guarantee by a measurable amount.
-3. **Prior knowledge buys back the cost of learning:** a structured model cuts the rovers lost while learning from about 1,250 (Q-learning) to 17, and to 1 when it plans under a risk bound; a safety shield cuts it about fivefold for a model-free learner; map features carry over to unseen maps. Reward shaping did not help, and that is reported too.
+1. The oracle gives the expected cost and the failure probability of any policy exactly. At a failure probability of 0.001 it takes 0.17 ms, where a Monte Carlo estimate accurate to 10% needs 383,776 rollouts, 2,043 times as long ([E0](#exact-evaluation-versus-monte-carlo-e0)).
+2. A penalty is not a constraint. One fixed failure price broke a 1% bound on 7 of 12 maps (worst 1.98%); the constrained solver met it on all 12 at the minimum cost, with a certificate of optimality ([E3](#a-failure-penalty-is-not-a-risk-constraint-e3)). A planner that believes the slip is 16 times lower than it is exceeds the bound by 13.7 percentage points ([E2](#what-a-wrong-slip-estimate-costs-e2)).
+3. Prior knowledge buys back the cost of learning. A structured model lost 17 rovers while learning against 1,252 for Q-learning, and 1 when planning under a risk bound; a safety shield cut a model-free learner's losses about fivefold; features computed from the map carry over to unseen maps with a median regret of 18.7% ([E1](#what-prior-knowledge-buys-back-e1), [E4](#learning-from-samples-e4)). Reward shaping did not help, and the results say so.
 
-Results are measured on the generated map families in `experiments/maps/` (grid worlds), not on real vehicles.
+The numbers hold for the generated map families in `experiments/maps/`, which are grid worlds, not real vehicles.
 
-### Reproduce
+## Quickstart
+
+As a library:
+
+```python
+from riskladder.env import build_model, load_map
+from riskladder.agents import solve_cmdp
+
+mdp = build_model(load_map("experiments/maps/ridge/ridge-6x30-s3000.map"))
+plan = solve_cmdp(mdp, 0.01)   # cheapest plan whose failure probability is at most 1%
+print(plan.result)             # exact cost and probabilities of that plan
+```
+
+As an API (`uv sync --extra app` first):
+
+```bash
+uv run uvicorn app.main:app --port 7860
+python3 -c 'import json,sys; print(json.dumps({"map": open(sys.argv[1]).read(), "delta": 0.01}))' \
+  experiments/maps/ridge/ridge-6x30-s3000.map | curl -s localhost:7860/plan -H 'content-type: application/json' -d @-
+```
+
+As the demo: `uv sync --extra app --extra demo --extra exp`, run the same `uvicorn` command and open http://localhost:7860/demo, or use the live link above. Endpoints, limits and deployment are in [docs/api.md](docs/api.md).
+
+## Design decisions
+
+The environment is a grid because its states can be enumerated, which makes the exact oracle possible; the cost is that nothing here involves continuous state or perception.
+
+Failure has a price inside the environment's cost, `C_fail` (5 times the longest hazard-free route times the move cost), and is also tracked as a probability. Without the price every optimiser would walk into a hazard early, since entering one ends the episode with a small cost. With it, the probability is free to be constrained separately.
+
+Planning is a stochastic shortest path problem with no discounting, so a policy that never ends has infinite cost. Evaluation uses a finite horizon and reports the probability of a timeout, so a policy that loops is charged for it.
+
+A constrained solution needs a mixture of two policies because the failure probability of the optimal Lagrangian policy jumps as the multiplier grows. The optimum sits at a jump, and mixing the two policies on either side, chosen once per episode, meets the bound exactly.
+
+The shield bounds the risk of each step under an assumed slip bound. It does not bound the risk of an episode, and it relaxes its own threshold in cells where no safe route exists.
+
+The structured model learner knows the geometry of the map and learns the slip probabilities and costs. It is not a fair comparison with a learner that knows nothing; the count-based model learner is there so that the gap between them is the value of the map.
+
+## Limitations
+
+The environment is small and the noise is a single sideways slip. The shield assumes a known upper bound on the slip, and the constrained planner's guarantee holds only if its model is right. The learners are tabular or linear; there is no deep reinforcement learning. Tail risk (CVaR) is a Monte Carlo estimate. The step sizes were tuned on a small grid and the best values lie on its edge. Shaping did not help and I have not found out why.
+
+## Reproduce
 
 ```bash
 uv sync
@@ -40,7 +85,7 @@ uv run python -m experiments.run all           # every experiment and results/SU
 uv run python -m experiments.run list          # the experiments and what each shows
 ```
 
-## Results so far
+## Results in detail
 
 ### Rung 1: planning as if the rover never slips (E5)
 
