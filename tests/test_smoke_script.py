@@ -66,12 +66,28 @@ def test_deploy_stages_only_what_the_image_needs(tmp_path):
         names
     )
     assert "app/main.py" in names and "src/riskladder/service.py" in names
+    assert not any(n.startswith(("tests", "docs", "tools", "bench")) for n in names)
     assert not any(
-        n.startswith(("tests", "experiments", "docs", "results", "tools")) for n in names
+        n.startswith("experiments") and not n.startswith("experiments/maps") for n in names
     )
+    assert not any(n.startswith(("results/raw", "results/smoke")) for n in names)
     assert not any("__pycache__" in n for n in names)
     assert (tmp_path / "COMMIT_SHA").read_text().strip() == "abc1234def"
     assert (tmp_path / "README.md").read_text().startswith("---\ntitle:")  # the Space's own README
+
+
+def test_everything_the_dockerfile_copies_is_in_what_is_uploaded(tmp_path):
+    """Regression: the demo added `COPY experiments/maps` and `COPY results` to the Dockerfile
+    while the upload still sent neither, so the Space build would have failed."""
+    deploy_space.stage(tmp_path, "abc1234def")
+    copied = []
+    for line in (deploy_space.ROOT / "Dockerfile").read_text().splitlines():
+        parts = line.split()
+        if parts and parts[0] == "COPY" and not any(p.startswith("--from") for p in parts):
+            copied += [p for p in parts[1:-1] if not p.startswith("--")]
+    assert copied
+    for source in copied:
+        assert list(tmp_path.glob(source)), f"the Dockerfile copies {source} but it is not uploaded"
 
 
 @pytest.mark.parametrize(

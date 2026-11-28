@@ -3,7 +3,7 @@
     HF_TOKEN=... HF_SPACE=owner/name COMMIT=<sha> python scripts/deploy_space.py
 
 Needs `huggingface_hub` (CI installs it with `uv run --with huggingface_hub`). Only the files the
-image needs are uploaded: the Space does not receive tests, experiments or notes.
+image needs are uploaded: the Space does not receive tests, experiment code or notes.
 """
 
 from __future__ import annotations
@@ -20,8 +20,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
 FILES = ["Dockerfile", "pyproject.toml", "uv.lock", "LICENSE"]
-FOLDERS = ["src", "app"]
-IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc")
+FOLDERS = ["src", "app", "experiments/maps", "results"]  # the demo shows these maps and results
+IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", "raw", "smoke")
 TIMEOUT_SECONDS = 20 * 60
 
 
