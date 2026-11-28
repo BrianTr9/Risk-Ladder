@@ -44,8 +44,8 @@ from riskladder.env import build_model, load_map
 from riskladder.agents import solve_cmdp
 
 mdp = build_model(load_map("experiments/maps/ridge/ridge-6x30-s3000.map"))
-plan = solve_cmdp(mdp, 0.01)   # cheapest plan whose failure probability is at most 1%
-print(plan.result)             # exact cost and probabilities of that plan
+plan = solve_cmdp(mdp, 0.01)  # cheapest plan whose failure probability is at most 1%
+print(plan.result)  # exact cost and probabilities of that plan
 ```
 
 As an API (`uv sync --extra app` first):
