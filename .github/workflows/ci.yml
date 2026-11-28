@@ -46,14 +46,17 @@ jobs:
   deploy:
     needs: docker
     # Runs only on main and only once a Space is configured (repository variable HF_SPACE and
-    # secret HF_TOKEN); until then the pipeline stops after the container check.
+    # secret HF_TOKEN); until then the pipeline stops after the container check. The Space is a
+    # Gradio one on ZeroGPU hardware, because a free account cannot create a Docker or CPU Space.
     if: github.ref == 'refs/heads/main' && vars.HF_SPACE != ''
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
       - name: Upload, wait for this commit and smoke test the Space
-        run: uv run --no-project --with huggingface_hub python scripts/deploy_space.py
+        run: >
+          uv run --no-project --with huggingface_hub --with gradio_client==2.7.2
+          python scripts/deploy_space.py
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           HF_SPACE: ${{ vars.HF_SPACE }}

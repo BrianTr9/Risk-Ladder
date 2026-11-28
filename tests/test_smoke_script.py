@@ -60,34 +60,21 @@ def test_smoke_script_reports_an_unreachable_server_as_an_error():
         smoke_api.main(["--url", "http://127.0.0.1:9", "--calls", "1"])
 
 
-def test_deploy_stages_only_what_the_image_needs(tmp_path):
+def test_deploy_stages_only_what_the_space_needs(tmp_path):
     names = deploy_space.stage(tmp_path, "abc1234def")
-    assert {"Dockerfile", "pyproject.toml", "uv.lock", "LICENSE", "README.md", "COMMIT_SHA"} <= set(
-        names
-    )
-    assert "app/main.py" in names and "src/riskladder/service.py" in names
+    assert {"space_app.py", "requirements.txt", "README.md", "LICENSE", "COMMIT_SHA"} <= set(names)
+    assert "app/ui.py" in names and "src/riskladder/service.py" in names
+    assert "results/SUMMARY.md" in names and any(n.startswith("experiments/maps/") for n in names)
     assert not any(n.startswith(("tests", "docs", "tools", "bench")) for n in names)
-    assert not any(
-        n.startswith("experiments") and not n.startswith("experiments/maps") for n in names
-    )
+    code = [
+        n for n in names if n.startswith("experiments") and not n.startswith("experiments/maps")
+    ]
+    assert not code
     assert not any(n.startswith(("results/raw", "results/smoke")) for n in names)
+    assert "Dockerfile" not in names  # a Gradio Space is built from its requirements
     assert not any("__pycache__" in n for n in names)
     assert (tmp_path / "COMMIT_SHA").read_text().strip() == "abc1234def"
     assert (tmp_path / "README.md").read_text().startswith("---\ntitle:")  # the Space's own README
-
-
-def test_everything_the_dockerfile_copies_is_in_what_is_uploaded(tmp_path):
-    """Regression: the demo added `COPY experiments/maps` and `COPY results` to the Dockerfile
-    while the upload still sent neither, so the Space build would have failed."""
-    deploy_space.stage(tmp_path, "abc1234def")
-    copied = []
-    for line in (deploy_space.ROOT / "Dockerfile").read_text().splitlines():
-        parts = line.split()
-        if parts and parts[0] == "COPY" and not any(p.startswith("--from") for p in parts):
-            copied += [p for p in parts[1:-1] if not p.startswith("--")]
-    assert copied
-    for source in copied:
-        assert list(tmp_path.glob(source)), f"the Dockerfile copies {source} but it is not uploaded"
 
 
 @pytest.mark.parametrize(

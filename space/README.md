@@ -2,20 +2,24 @@
 title: Risk Ladder
 colorFrom: blue
 colorTo: gray
-sdk: docker
-app_port: 7860
+sdk: gradio
+sdk_version: 6.32.0
+python_version: "3.12"
+app_file: space_app.py
 pinned: false
 license: mit
-short_description: Exact risk-bounded mission planning, API and demo
+short_description: Exact risk-bounded mission planning demo and API
 ---
 
-# RiskLadder API
+# RiskLadder
 
-Plan a mission for a rover on a hazard map and measure its risk exactly. `POST /plan` returns the
-cheapest policy with the probability of losing the rover bounded by `delta` (a constrained MDP,
-solved exactly with an optimality certificate); `POST /evaluate` scores a policy you bring.
+Plan a mission for a rover on a hazard map and measure its risk exactly. The demo plans with the
+probability of losing the rover bounded by `delta` (a constrained MDP, solved exactly with an
+optimality certificate), shows what a wrong slip estimate breaks, and browses the measured results.
 
-The root opens an interactive demo (plan a mission, see what a wrong slip estimate breaks, browse the results); `/docs` has the API documentation. The free Space sleeps when idle, so the first
-request after a quiet period can take a minute while it wakes up.
+The same planner is available as an API: `gradio_client.Client(<this space>).predict(map, delta,
+api_name="/plan")`. The free Space sleeps when idle, so the first request after a quiet period can
+take a minute while it wakes up. It runs on ZeroGPU hardware only because that is the free option;
+nothing here uses a GPU.
 
 Source and write-up: https://github.com/BrianTr9/Risk-Ladder

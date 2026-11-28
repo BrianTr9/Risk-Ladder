@@ -63,10 +63,20 @@ uv run python scripts/smoke_api.py --url http://localhost:7860
 
 ## Deployment
 
-CI builds the image, starts the container and smoke tests it on every push. The deploy job uploads to a Hugging Face Space, waits until `/health` reports the new commit, and smoke tests the live URL. It stays skipped until the Space is configured:
+There are three ways to run it, all from the same code:
 
-1. Create a Space on Hugging Face with the **Docker** SDK (blank template), for example `BrianTr9/risk-ladder`.
-2. Create an access token with write access to it.
+| Where | What runs | Checked by |
+|---|---|---|
+| Your machine | `uvicorn app.main:app` (REST API and `/demo`) | the test suite |
+| Docker | the same server in a container | the `docker` CI job (`scripts/smoke_api.py`) |
+| Hugging Face Space | the demo and a `/plan` endpoint as a Gradio app (`space/space_app.py`) | the `deploy` CI job (`scripts/smoke_space.py`) |
+
+**Why the Space is Gradio and not Docker.** A free Hugging Face account can no longer create a Docker Space or a CPU Space (forum reports and a staff reply; the pricing page still lists CPU Basic as free, so check what your account offers): [Docker SDK marked as Paid](https://discuss.huggingface.co/t/docker-sdk-now-marked-as-paid-when-creating-a-new-space/177580), [new free accounts cannot create CPU Basic Gradio Spaces](https://discuss.huggingface.co/t/new-free-accounts-cannot-create-cpu-basic-gradio-spaces-only-zerogpu-available/177629). What a free account can create is a Gradio Space on ZeroGPU hardware. The planner is CPU-only; ZeroGPU only requires that one function is registered for the GPU at startup, so `space_app.py` registers a placeholder it never calls. The REST API (`/plan`, `/evaluate`, `/health`) is therefore not served by the Space; the Space exposes the demo and `/plan` through Gradio (`Client(url).predict(map, delta, api_name="/plan")`).
+
+CI builds the image and smoke tests the container on every push. The deploy job uploads the Space's files, waits until the Space runs that exact commit (the state `RUNNING` alone can still be the old build, so it also compares the Space's commit), and smoke tests `/plan` on the live URL. It stays skipped until the Space is configured:
+
+1. Create a Space on Hugging Face (https://huggingface.co/new-space): SDK **Gradio**, hardware **ZeroGPU**, public, named for example `risk-ladder`. A free account can host a limited number of ZeroGPU Spaces.
+2. Create an access token of type **Write** (or fine-grained with write access to that Space).
 3. In the GitHub repository settings add the secret `HF_TOKEN` and the variable `HF_SPACE` (`owner/name`).
 
-The free Space sleeps when idle, so the first request after a quiet period can take a minute.
+The first request after a quiet period can take a minute while the free Space wakes up.

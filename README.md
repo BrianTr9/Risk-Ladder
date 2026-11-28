@@ -205,7 +205,7 @@ Reproduce with `uv run python -m experiments.e1b`.
 
 ### The API and the demo
 
-`POST /plan` returns the cheapest policy with the failure probability bounded exactly, certified optimal by a dual bound; `POST /evaluate` scores a policy you bring. The same server hosts an interactive demo at `/demo` (plan a mission, see what a wrong slip estimate breaks, browse the results): `uv sync --extra app --extra demo --extra exp && uv run uvicorn app.main:app --port 7860`. See [docs/api.md](docs/api.md) for the endpoints, limits, measured latency, the demo and deployment.
+`POST /plan` returns the cheapest policy with the failure probability bounded exactly, certified optimal by a dual bound; `POST /evaluate` scores a policy you bring. The same server hosts an interactive demo at `/demo` (plan a mission, see what a wrong slip estimate breaks, browse the results): `uv sync --extra app --extra demo --extra exp && uv run uvicorn app.main:app --port 7860`. See [docs/api.md](docs/api.md) for the endpoints, limits, measured latency, the demo and deployment (the public Space is a free Gradio Space on ZeroGPU hardware).
 
 ## Development
 

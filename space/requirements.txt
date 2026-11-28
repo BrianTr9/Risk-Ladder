@@ -1,0 +1,5 @@
+numpy==2.5.5
+scipy==1.18.1
+matplotlib==3.11.2
+gradio==6.32.0
+spaces==0.52.1
