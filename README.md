@@ -58,7 +58,13 @@ python3 -c 'import json,sys; print(json.dumps({"map": open(sys.argv[1]).read(), 
 
 As the demo: `uv sync --extra app --extra demo --extra exp`, run the same `uvicorn` command and open http://localhost:7860/demo, or use the live link above. Endpoints, limits and deployment are in [docs/api.md](docs/api.md).
 
+## Who this is for
+
+The repository is a measured study with a small toolkit, not a library for real vehicles. It is for someone who wants to see how the risk of a learning or planning agent can be measured exactly and what recovers it; for someone benchmarking their own learner (five methods are enough, see [docs/learning.md](docs/learning.md)); and for someone who needs a plan with a certified failure bound on a grid map (the API, up to 2,500 cells). The experiments are small grid worlds, so the numbers say nothing about a physical vehicle.
+
 ## Design decisions
+
+The short version follows; [docs/decisions.md](docs/decisions.md) gives each decision with the alternative I passed over, the evidence, and a list of what I got wrong first.
 
 The environment is a grid because its states can be enumerated, which makes the exact oracle possible; the cost is that nothing here involves continuous state or perception.
 

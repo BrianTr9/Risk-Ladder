@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[1]
 README = (ROOT / "README.md").read_text()
 WRITEUP = (ROOT / "docs" / "writeup.md").read_text()
+DECISIONS = (ROOT / "docs" / "decisions.md").read_text()
 
 
 def anchors(text: str) -> set[str]:
@@ -62,3 +63,15 @@ def test_the_writeup_numbers_match_the_results():
     e1 = json.loads((ROOT / "results/e1.json").read_text())["configs"]
     for name in ("Q", "SARSA", "MB-count", "MB-struct"):
         assert f"{e1[name]['train_failures']['mean']:,.0f}" in WRITEUP, name
+
+
+def test_the_decision_log_follows_the_same_style_and_its_numbers_match_the_results():
+    assert "—" not in DECISIONS and "**" not in DECISIONS
+    assert not re.search(r"\byet\b", DECISIONS, re.I)
+    e1 = json.loads((ROOT / "results/e1.json").read_text())["configs"]
+    assert f"{e1['MB-count']['train_failures']['mean']:,.0f} against" in DECISIONS
+    e1c = json.loads((ROOT / "results/e1c.json").read_text())["configs"]
+    assert (
+        f"{e1c['route clear of hazards, scale 2']['train_failures']['mean']:,.0f} rovers"
+        in DECISIONS
+    )
